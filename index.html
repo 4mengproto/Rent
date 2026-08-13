@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>포엠이엔지 배차 시스템</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Firebase SDK 로드 -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* 커스텀 스크롤바 스타일링 */
+        ::-webkit-scrollbar { height: 14px; width: 14px; }
+        ::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 6px; border: 3px solid #f3f4f6; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        
+        /* 드래그 앤 드롭 시 타겟 행 강조 효과 */
+        .drag-over {
+            background-color: #dbeafe !important; /* bg-blue-100 */
+            border-top: 2px dashed #2563eb !important;
+            border-bottom: 2px dashed #2563eb !important;
+        }
+
+        /* 고정 헤더 시 테두리 겹침 현상 방지를 위한 CSS */
+        .sticky-header th {
+            position: sticky;
+            z-index: 30;
+            background-clip: padding-box;
+        }
+        .sticky-header tr:nth-child(1) th { top: 0; }
+        .sticky-header tr:nth-child(2) th { top: 38px; }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 md:p-8 relative">
+
+    <div class="max-w-[1600px] mx-auto space-y-6">
+        <!-- 헤더 영역 -->
+        <header class="bg-blue-800 text-white p-6 rounded-lg shadow-md relative flex items-center justify-center">
+            <!-- 좌측 홈 버튼 -->
+            <a href="https://4mengproto.github.io/Total-reserve/" class="absolute left-6 flex items-center gap-2 bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded-lg transition-colors font-bold text-sm shadow-sm">
+                <span class="text-lg">🏠</span> 홈
+            </a>
+            
+            <!-- 중앙 제목 -->
+            <h1 class="text-2xl font-bold text-center">포엠이엔지 배차 관리 대시보드</h1>
+            
+            <!-- 우측 상태 뱃지 -->
+            <span class="absolute right-6 text-sm bg-blue-700 px-3 py-1 rounded-full font-bold">🔥 Firebase 연동 모드</span>
+        </header>
+
+        <!-- 배차 등록/수정 폼 -->
+        <div id="formContainer" class="bg-white p-6 rounded-lg shadow-md transition-all duration-300">
+            <h2 id="formTitle" class="text-xl font-semibold mb-4 border-b pb-2 text-gray-800">신규 배차 등록</h2>
+            <form id="dispatchForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- 1. 신청자 및 화물 정보 -->
+                <div class="space-y-2 col-span-1 p-3 bg-yellow-50 rounded border border-yellow-200">
+                    <h3 class="text-sm font-bold text-yellow-800 border-b border-yellow-200 pb-1">신청자 및 차량 정보</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">작성일 <span id="createdDateDay" class="text-blue-600 font-bold ml-1"></span></label>
+                            <div class="relative mt-1 flex items-center">
+                                <input type="text" id="createdDateDisplay" class="block w-full border border-gray-300 rounded p-1.5 pr-8 text-sm bg-white text-gray-700 focus:outline-none focus:border-blue-500" placeholder="날짜 입력(예:0612)">
+                                <div class="absolute right-0 w-8 h-full flex items-center justify-center cursor-pointer">
+                                    <span class="text-gray-500 pointer-events-none">📅</span>
+                                    <input type="date" id="createdDate" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">작성자</label>
+                            <input type="text" id="creator" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm mt-1">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2 pt-1 border-t border-yellow-200/50 mt-1">
+                        <div class="col-span-1">
+                            <label class="block text-xs font-medium text-gray-700">신청톤</label>
+                            <input type="text" id="tonnage" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="예: 11톤">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-medium text-gray-700 text-blue-700 font-bold">차종</label>
+                            <select id="vehicleType" required class="mt-1 block w-full border border-blue-300 bg-blue-50 focus:bg-white rounded p-1.5 text-sm font-semibold">
+                                <option value="카고">카고</option>
+                                <option value="윙바디">윙바디</option>
+                                <option value="무관">무관</option>
+                            </select>
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-xs font-medium text-gray-700">대수</label>
+                            <input type="number" id="vehicleCount" required min="1" value="1" class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700">상차품목 및 비고</label>
+                        <input type="text" id="itemDetails" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="상차 품목 입력">
+                    </div>
+                </div>
+
+                <!-- 2. 상차지 정보 -->
+                <div class="space-y-2 col-span-1 p-3 bg-cyan-50 rounded border border-cyan-200">
+                    <div class="flex justify-between items-center border-b border-cyan-200 pb-1 mb-2">
+                        <h3 class="text-sm font-bold text-cyan-800">상차지</h3>
+                        <!-- 당착 체크박스 -->
+                        <label class="flex items-center text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded cursor-pointer border border-red-200 shadow-sm hover:bg-red-200 transition">
+                            <input type="checkbox" id="sameDayCheck" class="mr-1 cursor-pointer w-3 h-3"> 당착
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 font-bold text-red-600">배차 일시 <span class="text-gray-500 font-normal">(30분 단위)</span> <span id="dispatchDateDay" class="text-blue-600 ml-1"></span></label>
+                        <div class="flex gap-1 mt-1">
+                            <div class="relative w-1/2 flex items-center">
+                                <input type="text" id="dispatchDateDisplay" class="block w-full border border-gray-300 rounded p-1.5 pr-8 text-sm bg-white text-gray-700 focus:outline-none focus:border-blue-500" placeholder="MMDD">
+                                <div class="absolute right-0 w-8 h-full flex items-center justify-center cursor-pointer">
+                                    <span class="text-gray-500 pointer-events-none">📅</span>
+                                    <input type="date" id="dispatchDate" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" tabindex="-1">
+                                </div>
+                            </div>
+                            <select id="dispatchHour" required class="block w-1/4 border border-gray-300 rounded p-1.5 text-sm"></select>
+                            <select id="dispatchMinute" required class="block w-1/4 border border-gray-300 rounded p-1.5 text-sm">
+                                <option value="00">00분</option>
+                                <option value="30">30분</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700">업체명</label>
+                        <input type="text" id="loadingCompany" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 text-blue-700">주소</label>
+                        <input type="text" id="loadingAddress" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="상차지 주소 입력">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700">정보 (담당자/연락처)</label>
+                        <input type="text" id="loadingInfo" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="예: 김대리 / 010-0000-0000">
+                    </div>
+                </div>
+
+                <!-- 3. 경유지 정보 -->
+                <div class="space-y-2 col-span-1 p-3 bg-emerald-50 rounded border border-emerald-200">
+                    <div class="flex justify-between items-center border-b border-emerald-200 pb-1 mb-2">
+                        <h3 class="text-sm font-bold text-emerald-800 flex items-center">
+                            <input type="checkbox" id="useWaypointCheck" class="mr-1.5 w-4 h-4 cursor-pointer text-emerald-600"> 경유지 포함
+                        </h3>
+                        <div class="flex gap-2 text-[10px] font-bold text-emerald-700">
+                            <label class="cursor-pointer flex items-center"><input type="checkbox" class="waypoint-type waypoint-field mr-1" value="상차" disabled>상차</label>
+                            <label class="cursor-pointer flex items-center"><input type="checkbox" class="waypoint-type waypoint-field mr-1" value="하차" disabled>하차</label>
+                            <label class="cursor-pointer flex items-center"><input type="checkbox" class="waypoint-type waypoint-field mr-1" value="상/하차" disabled>상/하차</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-600">도착 정보/일시 <span class="text-gray-400 font-normal">(30분 단위)</span> <span id="waypointArrivalDateDay" class="text-blue-600 font-bold ml-1"></span></label>
+                        <div class="flex gap-1 mt-1">
+                            <div class="relative w-1/2 flex items-center">
+                                <input type="text" id="waypointArrivalDateDisplay" class="waypoint-field block w-full border border-gray-300 rounded p-1.5 pr-8 text-sm bg-gray-200 text-gray-500 cursor-not-allowed focus:outline-none focus:border-blue-500" placeholder="MMDD" disabled>
+                                <div class="absolute right-0 w-8 h-full flex items-center justify-center cursor-pointer">
+                                    <span class="text-gray-500 pointer-events-none">📅</span>
+                                    <input type="date" id="waypointArrivalDate" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" style="pointer-events: none;" tabindex="-1">
+                                </div>
+                            </div>
+                            <select id="waypointArrivalHour" class="waypoint-field block w-1/4 border border-gray-300 rounded p-1.5 text-sm bg-gray-200 text-gray-500 cursor-not-allowed" disabled></select>
+                            <select id="waypointArrivalMinute" class="waypoint-field block w-1/4 border border-gray-300 rounded p-1.5 text-sm bg-gray-200 text-gray-500 cursor-not-allowed" disabled>
+                                <option value="00">00분</option>
+                                <option value="30">30분</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700">업체명</label>
+                        <input type="text" id="waypointCompany" class="waypoint-field mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm bg-gray-200 text-gray-500 cursor-not-allowed" placeholder="경유지 업체명" disabled>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700">주소</label>
+                        <input type="text" id="waypointAddress" class="waypoint-field mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm bg-gray-200 text-gray-500 cursor-not-allowed" placeholder="경유지 주소" disabled>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700">정보 (담당자/연락처)</label>
+                        <input type="text" id="waypointInfo" class="waypoint-field mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm bg-gray-200 text-gray-500 cursor-not-allowed" placeholder="경유지 담당자/연락처" disabled>
+                    </div>
+                </div>
+
+                <!-- 4. 하차지 정보 -->
+                <div class="space-y-2 col-span-1 p-3 bg-orange-50 rounded border border-orange-200">
+                    <h3 class="text-sm font-bold text-orange-800 border-b border-orange-200 pb-1 mb-2">하차지</h3>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 font-bold text-red-600">도착 일시 <span class="text-gray-500 font-normal">(30분 단위)</span> <span id="arrivalDateDay" class="text-blue-600 ml-1"></span></label>
+                        <div class="flex gap-1 mt-1">
+                            <div class="relative w-1/2 flex items-center">
+                                <input type="text" id="arrivalDateDisplay" class="block w-full border border-gray-300 rounded p-1.5 pr-8 text-sm bg-white text-gray-700 focus:outline-none focus:border-blue-500 transition-colors" placeholder="MMDD">
+                                <div class="absolute right-0 w-8 h-full flex items-center justify-center cursor-pointer">
+                                    <span class="text-gray-500 pointer-events-none">📅</span>
+                                    <input type="date" id="arrivalDate" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" tabindex="-1">
+                                </div>
+                            </div>
+                            <select id="arrivalHour" required class="block w-1/4 border border-gray-300 rounded p-1.5 text-sm transition-colors"></select>
+                            <select id="arrivalMinute" required class="block w-1/4 border border-gray-300 rounded p-1.5 text-sm transition-colors">
+                                <option value="00">00분</option>
+                                <option value="30">30분</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700">업체명</label>
+                        <input type="text" id="unloadingCompany" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700">주소</label>
+                        <input type="text" id="unloadingAddress" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="하차지 주소">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700">정보 (담당자/연락처)</label>
+                        <input type="text" id="unloadingInfo" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="하차지 담당자/연락처">
+                    </div>
+                </div>
+
+                <!-- 버튼 영역 -->
+                <div class="col-span-1 md:col-span-2 lg:col-span-4 mt-4 flex flex-col md:flex-row gap-3 items-center border-t border-gray-200 pt-4">
+                    <div class="flex flex-wrap flex-1 gap-2 w-full">
+                        <button type="submit" id="submitBtn" class="flex-1 min-w-[200px] bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition font-bold text-lg shadow">
+                            배차 내역 저장하기
+                        </button>
+                        <button type="button" id="copyNewBtn" onclick="copyToNew()" class="hidden bg-emerald-600 text-white py-3 px-4 rounded-md hover:bg-emerald-700 transition font-bold text-base shadow whitespace-nowrap">
+                            이 내역으로 신규 생성
+                        </button>
+                        <button type="button" id="deleteBtn" onclick="deleteDispatch()" class="hidden bg-red-600 text-white py-3 px-4 rounded-md hover:bg-red-700 transition font-bold text-base shadow whitespace-nowrap">
+                            내역 삭제
+                        </button>
+                        <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden bg-gray-500 text-white py-3 px-4 rounded-md hover:bg-gray-600 transition font-bold text-base shadow whitespace-nowrap">
+                            작업 취소
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- 검색(필터) 기능 영역 -->
+        <div class="bg-gray-800 p-4 rounded-lg shadow-md flex flex-col md:flex-row gap-4 items-center">
+            <div class="flex items-center text-white font-semibold whitespace-nowrap mr-2">
+                <span class="mr-2">🔍</span> 상세 검색
+            </div>
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+                <input type="text" id="searchLoading" placeholder="상차지 검색 (업체명 또는 주소)" class="border border-gray-600 bg-gray-700 text-white placeholder-gray-400 rounded p-2 text-sm w-full focus:outline-none focus:border-blue-400">
+                <input type="text" id="searchUnloading" placeholder="하차지 검색 (업체명 또는 주소)" class="border border-gray-600 bg-gray-700 text-white placeholder-gray-400 rounded p-2 text-sm w-full focus:outline-none focus:border-blue-400">
+                <input type="text" id="searchTonnage" placeholder="신청톤 검색 (예: 11톤)" class="border border-gray-600 bg-gray-700 text-white placeholder-gray-400 rounded p-2 text-sm w-full focus:outline-none focus:border-blue-400">
+            </div>
+            <button type="button" onclick="clearSearch()" class="bg-gray-600 text-white px-5 py-2 rounded hover:bg-gray-500 transition text-sm font-semibold whitespace-nowrap">
+                조건 초기화
+            </button>
+        </div>
+
+        <!-- 엑셀 다운로드 영역 -->
+        <div class="bg-white p-4 rounded-lg shadow-md flex flex-col lg:flex-row justify-between items-center border-2 border-green-500/30 bg-green-50/30 gap-4">
+            <div class="flex items-center text-green-800 font-bold text-sm md:text-base whitespace-nowrap">
+                <span class="mr-2 text-xl">📊</span> 엑셀(Excel) 추출
+            </div>
+            <div class="flex flex-col md:flex-row gap-4 items-center w-full lg:w-auto">
+                <div class="flex items-center gap-2 md:border-r-2 border-gray-300 md:pr-4 w-full md:w-auto justify-end">
+                    <input type="month" id="excelMonth" class="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-green-500 font-semibold bg-white cursor-pointer w-full md:w-auto">
+                    <button type="button" onclick="downloadMonthlyExcel()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm font-bold shadow whitespace-nowrap w-full md:w-auto">
+                        📅 월별 전체 추출
+                    </button>
+                </div>
+                <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                    <button type="button" onclick="downloadSelectedExcel()" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition text-sm font-bold shadow whitespace-nowrap w-full md:w-auto">
+                        ☑️ 체크된 내역만 추출
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 실시간 배차 현황 리스트 -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 border-b pb-2 gap-3">
+                <div class="flex flex-col md:flex-row items-start md:items-center gap-3">
+                    <h2 class="text-xl font-semibold text-gray-800">실시간 배차 현황</h2>
+                    <span class="text-xs text-gray-500 bg-yellow-100 text-yellow-800 px-2 py-1 rounded shadow-sm">💡 내역을 클릭하면 <strong>배차 정보가 클립보드에 자동 복사</strong>되며 수정 모드로 진입합니다.</span>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                    <div class="flex items-center gap-2 bg-blue-50 p-1.5 rounded border border-blue-200">
+                        <label for="viewMonth" class="text-sm font-bold text-blue-800 whitespace-nowrap">📅 조회 월:</label>
+                        <input type="month" id="viewMonth" class="border border-blue-300 rounded p-1 text-sm focus:outline-none focus:border-blue-500 font-semibold bg-white cursor-pointer text-blue-900">
+                    </div>
+                    <div class="text-xs font-bold text-purple-700 bg-purple-50 p-1.5 rounded border border-purple-200">
+                        ↕️ 각 행의 '☰' 버튼을 드래그해서 원하는 순서로 변경할 수 있습니다.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 상단 가로 스크롤바 추가 -->
+            <div id="topScrollContainer" class="overflow-x-auto overflow-y-hidden mb-1 rounded bg-gray-50 border-t border-l border-r border-gray-300" style="height: 16px;">
+                <div id="topScrollDummy" class="h-[1px]"></div>
+            </div>
+
+            <!-- 스크롤 및 고정 헤더가 적용되는 래퍼 영역 -->
+            <div id="tableScrollWrapper" class="overflow-x-auto overflow-y-auto border border-gray-400 max-h-[700px] relative rounded-b-md">
+                <table id="dispatchTable" class="min-w-[2600px] w-full text-left whitespace-nowrap border-collapse bg-white">
+                    <thead class="sticky-header shadow-md">
+                        <tr class="text-center text-sm border-b border-gray-400 font-semibold text-gray-800 h-[38px]">
+                            <th rowspan="2" class="p-2 border-r border-gray-400 bg-gray-200 w-10 sticky left-0 z-40">순서</th>
+                            <th rowspan="2" class="p-2 border-r border-gray-400 bg-gray-200 w-10">
+                                <input type="checkbox" id="selectAllBtn" class="w-4 h-4 cursor-pointer" onchange="toggleAll(this.checked)">
+                            </th>
+                            <th colspan="2" class="p-2 border-r border-gray-400 bg-[#ffea00]">신청자 정보</th>
+                            <th rowspan="2" class="p-2 border-r border-gray-400 bg-[#d1f4f9]">배차일시</th>
+                            <th colspan="3" class="p-2 border-r border-gray-400 bg-[#d1f4f9]">상 차 지</th> 
+                            <th colspan="3" class="p-2 border-r border-gray-400 bg-[#ffe5a0]">경 유 지</th> 
+                            <th colspan="3" class="p-2 border-r border-gray-400 bg-[#d1f4f9]">하 차 지</th> 
+                            <th colspan="4" class="p-2 border-r border-gray-400 bg-[#d1f4f9]">차량 정보</th>
+                            <th rowspan="2" class="p-2 border-r border-gray-400 bg-[#d1f4f9]">상차품목 및 비고</th>
+                            <th rowspan="2" class="p-2 border-r border-gray-400 bg-[#d1f4f9]">결 재</th>
+                            <th rowspan="2" class="p-2 border-r border-gray-400 bg-red-50 text-red-900 font-bold">특이사항 추가<br><span class="text-xs text-red-600 font-normal">(관리자 전용)</span></th>
+                            <th rowspan="2" class="p-2 bg-indigo-50 text-indigo-900 font-bold">비용 추가<br><span class="text-xs text-indigo-600 font-normal">(관리자 전용)</span></th>
+                        </tr>
+                        <tr class="text-center text-sm border-b border-gray-400 font-semibold text-gray-800 h-[38px]">
+                            <th class="p-2 border-r border-gray-400 bg-[#ffea00]">작성일</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#ffea00]">작성자</th>
+                            
+                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">업체명</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9] text-blue-700">주소</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">정보<br>(담당자/연락처)</th>
+                            
+                            <th class="p-2 border-r border-gray-400 bg-[#ffe5a0]">업체명</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#ffe5a0] text-blue-700">주소</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#ffe5a0]">정보<br>(담당자/연락처)</th>
+                            
+                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">업체명</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9] text-blue-700">주소</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">정보<br>(담당자/연락처)</th>
+                            
+                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">신청톤</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9] text-blue-700">차종</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">대수</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">도착일시</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dispatchTableBody" class="text-sm bg-white">
+                        <!-- 데이터 영역 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 복사 알림 토스트 팝업 -->
+    <div id="copyToast" class="fixed bottom-10 right-10 bg-gray-900 text-white px-6 py-4 rounded-lg shadow-2xl hidden transition-opacity duration-300 z-50 flex items-center gap-3">
+        <span class="text-2xl">📋</span>
+        <div>
+            <p class="font-bold">배차 정보 복사 완료!</p>
+            <p class="text-xs text-gray-300">수정 모드로 전환/양식이 복사되었습니다.</p>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔥 파이어베이스 설정 
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRwg3k5usuMkBXH9LB6T-9Uuw9ZU1TBMs",
+            authDomain: "formeng-7c4b3.firebaseapp.com",
+            databaseURL: "https://formeng-7c4b3-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "formeng-7c4b3",
+            storageBucket: "formeng-7c4b3.firebasestorage.app",
+            messagingSenderId: "745402830490",
+            appId: "1:745402830490:web:08cbc0c0787545ddb8d923"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const dispatchesCol = db.collection("dispatches");
+
+        let editingId = null;
+        let masterData = [];
+        let currentRenderedData = [];
+        const ADMIN_PWD = "140916"; 
+
+        let isDraggingRow = false;
+        let pendingUpdate = false;
+        let draggedItemId = null;
+        
+        let isSystemUpdate = false; 
+
+        // 🚀 클릭 하이라이트 동기화 함수
+        window.updateHighlightRow = function() {
+            const trs = document.querySelectorAll('#dispatchTableBody tr');
+            trs.forEach(tr => {
+                const id = tr.getAttribute('data-id');
+                if (!id) return;
+                
+                const item = currentRenderedData.find(d => d.id === id);
+                if (!item) return;
+
+                let rowBgClass = "text-center border-b border-gray-400 transition-colors cursor-pointer ";
+                const isCompleted = item.approval === '썬월드 완료' || item.approval === '백호 완료';
+                
+                // 🚀 우선순위 적용: 클릭 > 체크 > 완료 > 기본
+                if (item.id === editingId) {
+                    rowBgClass += "bg-orange-100 hover:bg-orange-200 font-semibold";
+                } else if (item.selected) {
+                    rowBgClass += "bg-yellow-100 hover:bg-yellow-200";
+                } else if (isCompleted) {
+                    rowBgClass += "bg-blue-50 hover:bg-blue-100";
+                } else {
+                    rowBgClass += "bg-white hover:bg-gray-100";
+                }
+                
+                tr.className = rowBgClass;
+            });
+        }
+
+        function getDayString(dateStr) {
+            if(!dateStr || dateStr === '-') return '';
+            const parts = dateStr.split('-');
+            if(parts.length !== 3) return '';
+            const d = new Date(parts[0], parseInt(parts[1]) - 1, parts[2]);
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            return `(${days[d.getDay()]})`;
+        }
+
+        function getDotDateString(dateStr) {
+            if(!dateStr || dateStr === '-') return '';
+            const parts = dateStr.split('-');
+            if(parts.length !== 3) return dateStr;
+            return `${parts[0]}.${parts[1]}.${parts[2]}.${getDayString(dateStr)}`;
+        }
+
+        function getSlashDateString(dateStr) {
+            if(!dateStr || dateStr === '-') return '';
+            const parts = dateStr.split('-');
+            if(parts.length !== 3) return dateStr;
+            return `${parts[0]}/${parts[1]}/${parts[2]}${getDayString(dateStr)}`;
+        }
+
+        function formatSlashDateTime(datetimeStr) {
+            if(!datetimeStr || datetimeStr === '-') return '';
+            const [date, time] = datetimeStr.split(' ');
+            if(!time) return getSlashDateString(date);
+            const [hour, min] = time.split(':');
+            return `${getSlashDateString(date)} ${hour}시 ${min}분`;
+        }
+
+        function formatDateTime(datetimeStr) {
+            if(!datetimeStr || datetimeStr === '-') return '';
+            const [date, time] = datetimeStr.split(' ');
+            if(!time) return getDotDateString(date);
+            const [hour, min] = time.split(':');
+            return `${getDotDateString(date)} ${hour}시 ${min}분`;
+        }
+
+        function formatDateOnly(dateStr) {
+            return getDotDateString(dateStr);
+        }
+
+        function getOrderSeq(item) {
+            return item.order_seq !== undefined ? item.order_seq : (item.created_timestamp || 0);
+        }
+
+        function attachDateParser(displayId, hiddenId) {
+            const displayEl = document.getElementById(displayId);
+            const hiddenEl = document.getElementById(hiddenId);
+            if(!displayEl || !hiddenEl) return;
+
+            displayEl.addEventListener('blur', function() {
+                let val = this.value.trim();
+                if (!val) {
+                    hiddenEl.value = '';
+                    hiddenEl.dispatchEvent(new Event('change'));
+                    return;
+                }
+                
+                let numStr = val.replace(/[^0-9]/g, '');
+                if(numStr.length === 0) {
+                     this.value = hiddenEl.value ? formatDateOnly(hiddenEl.value) : '';
+                     return;
+                }
+
+                let y, m, d;
+                const now = new Date();
+                
+                if (numStr.length >= 8) {
+                    y = numStr.substring(0,4); m = numStr.substring(4,6); d = numStr.substring(6,8);
+                } else if (numStr.length === 6) {
+                    y = '20' + numStr.substring(0,2); m = numStr.substring(2,4); d = numStr.substring(4,6);
+                } else if (numStr.length === 4 || numStr.length === 3) {
+                    let mmdd = numStr.padStart(4, '0');
+                    y = now.getFullYear(); m = mmdd.substring(0,2); d = mmdd.substring(2,4);
+                } else {
+                    this.value = hiddenEl.value ? formatDateOnly(hiddenEl.value) : '';
+                    return;
+                }
+
+                m = m.padStart(2, '0');
+                d = d.padStart(2, '0');
+                const validDateStr = `${y}-${m}-${d}`;
+                const testDate = new Date(validDateStr);
+                
+                if (isNaN(testDate.getTime())) {
+                    this.value = hiddenEl.value ? formatDateOnly(hiddenEl.value) : '';
+                    return;
+                }
+                
+                hiddenEl.value = validDateStr;
+                hiddenEl.dispatchEvent(new Event('change'));
+            });
+            
+            displayEl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.blur();
+                }
+            });
+        }
+
+        function toggleWaypointFields(enabled) {
+            const waypointFields = document.querySelectorAll('.waypoint-field');
+            const waypointArrivalDate = document.getElementById('waypointArrivalDate');
+            
+            waypointFields.forEach(el => {
+                el.disabled = !enabled;
+                if (!enabled) {
+                    el.classList.add('bg-gray-200', 'cursor-not-allowed', 'text-gray-500');
+                    el.classList.remove('bg-white', 'text-gray-700');
+                } else {
+                    el.classList.remove('bg-gray-200', 'cursor-not-allowed', 'text-gray-500');
+                    if (el.tagName !== 'SELECT' && el.type !== 'checkbox') {
+                        el.classList.add('bg-white', 'text-gray-700');
+                    } else if(el.tagName === 'SELECT') {
+                        el.classList.add('text-gray-700');
+                    }
+                }
+            });
+            
+            if (!enabled) {
+                waypointArrivalDate.style.pointerEvents = 'none';
+            } else {
+                waypointArrivalDate.style.pointerEvents = 'auto';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const hourOptions = Array.from({length: 24}, (_, i) => {
+                const h = String(i).padStart(2, '0');
+                return `<option value="${h}">${h}시</option>`;
+            });
+            
+            document.getElementById('dispatchHour').innerHTML = hourOptions.join('');
+            document.getElementById('arrivalHour').innerHTML = hourOptions.join('');
+            document.getElementById('waypointArrivalHour').innerHTML = hourOptions.join('');
+
+            const today = new Date();
+            const currentMonthStr = today.toISOString().slice(0, 7);
+            document.getElementById('excelMonth').value = currentMonthStr;
+            
+            const viewMonthInput = document.getElementById('viewMonth');
+            viewMonthInput.value = currentMonthStr;
+            viewMonthInput.addEventListener('change', applySearch);
+
+            attachDateParser('createdDateDisplay', 'createdDate');
+            attachDateParser('dispatchDateDisplay', 'dispatchDate');
+            attachDateParser('waypointArrivalDateDisplay', 'waypointArrivalDate');
+            attachDateParser('arrivalDateDisplay', 'arrivalDate');
+
+            const dateInputs = [
+                { input: 'createdDate', display: 'createdDateDisplay' },
+                { input: 'dispatchDate', display: 'dispatchDateDisplay' },
+                { input: 'waypointArrivalDate', display: 'waypointArrivalDateDisplay' },
+                { input: 'arrivalDate', display: 'arrivalDateDisplay' }
+            ];
+
+            dateInputs.forEach(pair => {
+                const inputEl = document.getElementById(pair.input);
+                const displayEl = document.getElementById(pair.display);
+                if(inputEl && displayEl) {
+                    inputEl.addEventListener('change', function() {
+                        displayEl.value = this.value ? formatDateOnly(this.value) : '';
+                    });
+                }
+            });
+
+            document.getElementById('searchLoading').addEventListener('input', applySearch);
+            document.getElementById('searchUnloading').addEventListener('input', applySearch);
+            document.getElementById('searchTonnage').addEventListener('input', applySearch);
+
+            const wpCheckboxes = document.querySelectorAll('.waypoint-type');
+            wpCheckboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    if (this.checked) {
+                        wpCheckboxes.forEach(other => {
+                            if (other !== this) other.checked = false;
+                        });
+                    }
+                });
+            });
+
+            const useWaypointCheck = document.getElementById('useWaypointCheck');
+            useWaypointCheck.addEventListener('change', function() {
+                toggleWaypointFields(this.checked);
+                if (this.checked) {
+                    const dispatchVal = document.getElementById('dispatchDate').value;
+                    if (dispatchVal) {
+                        const wpDate = document.getElementById('waypointArrivalDate');
+                        wpDate.value = dispatchVal;
+                        isSystemUpdate = true;
+                        wpDate.dispatchEvent(new Event('change'));
+                        isSystemUpdate = false;
+                    }
+                } else {
+                    const wpDate = document.getElementById('waypointArrivalDate');
+                    wpDate.value = '';
+                    isSystemUpdate = true;
+                    wpDate.dispatchEvent(new Event('change'));
+                    isSystemUpdate = false;
+                    
+                    document.querySelectorAll('.waypoint-type').forEach(cb => cb.checked = false);
+                    document.getElementById('waypointCompany').value = '';
+                    document.getElementById('waypointAddress').value = '';
+                    document.getElementById('waypointInfo').value = '';
+                }
+            });
+
+            const sameDayCheck = document.getElementById('sameDayCheck');
+            const dispatchDateInput = document.getElementById('dispatchDate');
+            const arrivalDate = document.getElementById('arrivalDate');
+            const arrivalHour = document.getElementById('arrivalHour');
+            const arrivalMinute = document.getElementById('arrivalMinute');
+            const arrivalDateDisplay = document.getElementById('arrivalDateDisplay');
+
+            function syncSameDay() {
+                const isChecked = sameDayCheck.checked;
+                const elements = [arrivalDate, arrivalHour, arrivalMinute];
+                
+                elements.forEach(el => {
+                    el.disabled = isChecked;
+                    if(isChecked) {
+                        el.classList.add('bg-gray-200', 'cursor-not-allowed', 'text-gray-500');
+                        if(el.id === 'arrivalDate') {
+                            el.value = dispatchDateInput.value;
+                            isSystemUpdate = true;
+                            el.dispatchEvent(new Event('change')); 
+                            isSystemUpdate = false;
+                            arrivalDateDisplay.classList.add('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+                            arrivalDateDisplay.readOnly = true; 
+                            document.getElementById('arrivalDate').style.pointerEvents = 'none'; 
+                        }
+                    } else {
+                        el.classList.remove('bg-gray-200', 'cursor-not-allowed', 'text-gray-500');
+                        if(el.id === 'arrivalDate') {
+                            arrivalDateDisplay.classList.remove('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+                            arrivalDateDisplay.readOnly = false; 
+                            document.getElementById('arrivalDate').style.pointerEvents = 'auto'; 
+                        }
+                    }
+                });
+            }
+
+            sameDayCheck.addEventListener('change', syncSameDay);
+            
+            dispatchDateInput.addEventListener('change', () => {
+                if (isSystemUpdate) return;
+                
+                const newVal = dispatchDateInput.value;
+                if (newVal) {
+                    arrivalDate.value = newVal;
+                    isSystemUpdate = true;
+                    arrivalDate.dispatchEvent(new Event('change'));
+                    isSystemUpdate = false;
+                }
+            });
+
+            const topScrollContainer = document.getElementById('topScrollContainer');
+            const topScrollDummy = document.getElementById('topScrollDummy');
+            const tableScrollWrapper = document.getElementById('tableScrollWrapper');
+            const dispatchTable = document.getElementById('dispatchTable');
+
+            window.syncScrollWidth = function() {
+                if(dispatchTable && topScrollDummy) {
+                    topScrollDummy.style.width = dispatchTable.offsetWidth + 'px';
+                }
+            };
+
+            let isSyncingLeft = false;
+            let isSyncingRight = false;
+
+            topScrollContainer.addEventListener('scroll', function() {
+                if(!isSyncingLeft) {
+                    isSyncingRight = true;
+                    tableScrollWrapper.scrollLeft = this.scrollLeft;
+                }
+                isSyncingLeft = false;
+            });
+
+            tableScrollWrapper.addEventListener('scroll', function() {
+                if(!isSyncingRight) {
+                    isSyncingLeft = true;
+                    topScrollContainer.scrollLeft = this.scrollLeft;
+                }
+                isSyncingRight = false;
+            });
+
+            window.addEventListener('resize', syncScrollWidth);
+
+            resetForm();
+            fetchRealtimeDispatches();
+
+            document.getElementById('dispatchForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const dispatchStr = `${document.getElementById('dispatchDate').value} ${document.getElementById('dispatchHour').value}:${document.getElementById('dispatchMinute').value}`;
+                const arrivalStr = `${document.getElementById('arrivalDate').value} ${document.getElementById('arrivalHour').value}:${document.getElementById('arrivalMinute').value}`;
+                
+                let wpType = '';
+                let waypointCompany = '-';
+                let waypointAddress = '-';
+                let waypointInfo = '-';
+                let waypointArrivalStr = '-';
+
+                if (document.getElementById('useWaypointCheck').checked) {
+                    document.querySelectorAll('.waypoint-type').forEach(cb => { if(cb.checked) wpType = cb.value; });
+                    const wpDate = document.getElementById('waypointArrivalDate').value;
+                    if(wpDate) {
+                        waypointArrivalStr = `${wpDate} ${document.getElementById('waypointArrivalHour').value}:${document.getElementById('waypointArrivalMinute').value}`;
+                    }
+                    waypointCompany = document.getElementById('waypointCompany').value || '-';
+                    waypointAddress = document.getElementById('waypointAddress').value || '-';
+                    waypointInfo = document.getElementById('waypointInfo').value || '-';
+                }
+
+                const dispatchData = {
+                    created_date: document.getElementById('createdDate').value,
+                    creator: document.getElementById('creator').value,
+                    dispatch_datetime: dispatchStr,
+                    
+                    loading_company: document.getElementById('loadingCompany').value,
+                    loading_address: document.getElementById('loadingAddress').value,
+                    loading_info: document.getElementById('loadingInfo').value,
+                    
+                    waypoint_type: wpType,
+                    waypoint_company: waypointCompany,
+                    waypoint_address: waypointAddress,
+                    waypoint_info: waypointInfo,
+                    waypoint_arrival_datetime: waypointArrivalStr,
+                    
+                    unloading_company: document.getElementById('unloadingCompany').value,
+                    unloading_address: document.getElementById('unloadingAddress').value,
+                    unloading_info: document.getElementById('unloadingInfo').value,
+                    
+                    is_same_day: sameDayCheck.checked, 
+                    arrival_datetime: arrivalStr,
+                    
+                    tonnage: document.getElementById('tonnage').value,
+                    vehicle_type: document.getElementById('vehicleType').value,
+                    vehicle_count: document.getElementById('vehicleCount').value,
+                    
+                    item_details: document.getElementById('itemDetails').value,
+                };
+
+                try {
+                    if (editingId !== null) {
+                        const existingItem = masterData.find(i => i.id === editingId);
+                        dispatchData.memo = existingItem ? (existingItem.memo || '-') : '-';
+                        dispatchData.cost = existingItem ? (existingItem.cost || '-') : '-';
+                        dispatchData.selected = existingItem ? existingItem.selected : false; 
+                        dispatchData.created_timestamp = existingItem ? (existingItem.created_timestamp || Date.now()) : Date.now();
+                        dispatchData.order_seq = getOrderSeq(existingItem);
+                        
+                        await dispatchesCol.doc(editingId).update(dispatchData);
+                        alert('성공적으로 수정되었습니다.');
+                    } else {
+                        dispatchData.approval = '배차대기';
+                        dispatchData.memo = '-'; 
+                        dispatchData.cost = '-'; 
+                        dispatchData.created_timestamp = Date.now(); 
+                        dispatchData.selected = false; 
+                        dispatchData.order_seq = Date.now();
+
+                        await dispatchesCol.add(dispatchData);
+                        alert('신규 배차가 등록되었습니다.');
+                    }
+                    resetForm();
+                } catch (error) {
+                    console.error("데이터 저장 실패:", error);
+                    alert("데이터베이스 저장에 실패했습니다.");
+                }
+            });
+        });
+
+        function fetchRealtimeDispatches() {
+            dispatchesCol.onSnapshot((snapshot) => {
+                const newMasterData = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    data.id = doc.id; 
+                    const existingItem = masterData.find(item => item.id === doc.id);
+                    data.selected = existingItem ? existingItem.selected : false;
+                    newMasterData.push(data);
+                });
+                
+                newMasterData.sort((a, b) => getOrderSeq(b) - getOrderSeq(a));
+                masterData = newMasterData;
+                
+                if (isDraggingRow) {
+                    pendingUpdate = true; 
+                } else {
+                    applySearch(); 
+                }
+            }, (error) => {
+                console.error("실시간 연동 에러:", error);
+            });
+        }
+
+        window.handleDragStart = function(e, id) {
+            isDraggingRow = true;
+            draggedItemId = id;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => { e.target.classList.add('opacity-50'); }, 0); 
+        };
+
+        window.handleDragEnd = function(e) {
+            e.target.classList.remove('opacity-50');
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            
+            setTimeout(() => {
+                isDraggingRow = false;
+                if (pendingUpdate) {
+                    applySearch();
+                    pendingUpdate = false;
+                }
+            }, 100);
+        };
+
+        window.handleDragOver = function(e) {
+            e.preventDefault(); 
+            e.dataTransfer.dropEffect = 'move';
+            const tr = e.target.closest('tr');
+            if(tr && tr.getAttribute('data-id') !== draggedItemId) {
+                tr.classList.add('drag-over');
+            }
+        };
+
+        window.handleDragLeave = function(e) {
+            const tr = e.target.closest('tr');
+            if(tr) tr.classList.remove('drag-over');
+        };
+
+        window.handleDrop = async function(e, targetId) {
+            e.preventDefault();
+            const tr = e.target.closest('tr');
+            if(tr) tr.classList.remove('drag-over');
+
+            if (!draggedItemId || draggedItemId === targetId) return;
+
+            const draggedIdx = currentRenderedData.findIndex(i => i.id === draggedItemId);
+            const targetIdx = currentRenderedData.findIndex(i => i.id === targetId);
+
+            if (draggedIdx === -1 || targetIdx === -1) return;
+
+            const draggedItem = currentRenderedData[draggedIdx];
+            currentRenderedData.splice(draggedIdx, 1);
+            
+            const insertIdx = targetIdx; 
+            currentRenderedData.splice(insertIdx, 0, draggedItem);
+
+            let prevOrder = insertIdx > 0 ? getOrderSeq(currentRenderedData[insertIdx - 1]) : null;
+            let nextOrder = insertIdx < currentRenderedData.length - 1 ? getOrderSeq(currentRenderedData[insertIdx + 1]) : null;
+
+            let newOrderSeq;
+            if (prevOrder === null && nextOrder !== null) {
+                newOrderSeq = nextOrder + 100000;
+            } else if (prevOrder !== null && nextOrder === null) {
+                newOrderSeq = prevOrder - 100000;
+            } else if (prevOrder !== null && nextOrder !== null) {
+                newOrderSeq = (prevOrder + nextOrder) / 2;
+            } else {
+                newOrderSeq = Date.now();
+            }
+
+            draggedItem.order_seq = newOrderSeq;
+
+            renderTable(currentRenderedData);
+
+            try {
+                await dispatchesCol.doc(draggedItemId).update({ order_seq: newOrderSeq });
+            } catch (error) {
+                console.error("순서 업데이트 실패:", error);
+                alert("순서 저장에 실패했습니다.");
+            }
+        };
+
+        function generateExcel(dataArray, filename) {
+            const excelData = dataArray.map(item => {
+                const arrivalDatePart = item.arrival_datetime ? item.arrival_datetime.split(' ')[0] : '';
+                const displayArr = item.is_same_day ? `${formatDateOnly(arrivalDatePart)}_당착` : formatDateTime(item.arrival_datetime);
+                const wpCompanyDisplay = item.waypoint_type ? `[${item.waypoint_type}] ${item.waypoint_company}` : item.waypoint_company;
+
+                return {
+                    "작성일": formatDateOnly(item.created_date), 
+                    "작성자": item.creator,
+                    "배차일시": formatDateTime(item.dispatch_datetime),
+                    "상차지 업체명": item.loading_company,
+                    "상차지 주소": item.loading_address,
+                    "상차지 정보": item.loading_info,
+                    "경유지 업체명": wpCompanyDisplay === '-' ? '' : wpCompanyDisplay,
+                    "경유지 주소": item.waypoint_address === '-' ? '' : item.waypoint_address,
+                    "경유지 정보": item.waypoint_info === '-' ? '' : item.waypoint_info,
+                    "경유지 도착일시": item.waypoint_arrival_datetime && item.waypoint_arrival_datetime !== '-' ? formatDateTime(item.waypoint_arrival_datetime) : '',
+                    "하차지 업체명": item.unloading_company,
+                    "하차지 주소": item.unloading_address,
+                    "하차지 정보": item.unloading_info,
+                    "신청톤": item.tonnage,
+                    "차종": item.vehicle_type,
+                    "대수": item.vehicle_count,
+                    "도착일시": displayArr,
+                    "상차품목 및 비고": item.item_details,
+                    "특이사항 (관리자메모)": item.memo === '-' ? '' : item.memo,
+                    "비용 (관리자전용)": item.cost === '-' ? '' : (item.cost || ''),
+                    "결재상태": item.approval
+                }
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "배차내역");
+            
+            const wscols = [{wch:18}, {wch:8}, {wch:25}, {wch:15}, {wch:30}, {wch:15}, {wch:18}, {wch:30}, {wch:15}, {wch:25}, {wch:15}, {wch:30}, {wch:15}, {wch:8}, {wch:8}, {wch:6}, {wch:25}, {wch:30}, {wch:20}, {wch:15}, {wch:10}];
+            worksheet['!cols'] = wscols;
+
+            XLSX.writeFile(workbook, filename);
+        }
+
+        function downloadMonthlyExcel() {
+            const selectedMonth = document.getElementById('excelMonth').value; 
+            if(!selectedMonth) { alert("다운로드할 월을 선택해주세요."); return; }
+            const filteredData = masterData.filter(item => item.dispatch_datetime.startsWith(selectedMonth));
+            if(filteredData.length === 0) { alert(`${selectedMonth}월에 해당하는 배차 내역이 없습니다.`); return; }
+            generateExcel(filteredData, `포엠이엔지_월별배차내역_${selectedMonth}.xlsx`);
+        }
+
+        function downloadSelectedExcel() {
+            const selectedData = masterData.filter(item => item.selected);
+            if(selectedData.length === 0) { alert("표에서 먼저 체크해주세요."); return; }
+            const todayStr = new Date().toISOString().slice(0, 10);
+            generateExcel(selectedData, `포엠이엔지_배차내역_선택다운로드_${todayStr}.xlsx`);
+        }
+
+        async function deleteDispatch() {
+            if (editingId === null) return;
+            if (!confirm('정말 이 배차 내역을 삭제하시겠습니까?')) return;
+
+            try {
+                await dispatchesCol.doc(editingId).delete();
+                alert('삭제되었습니다.');
+                resetForm();
+            } catch (error) {
+                console.error("삭제 실패:", error);
+                alert('데이터베이스 삭제에 실패했습니다.');
+            }
+        }
+
+        // 🚀 토글 동작 시 실시간 하이라이트 함수 호출
+        window.toggleRow = function(el, id, isChecked) {
+            const item = masterData.find(d => d.id === id);
+            if(item) item.selected = isChecked;
+            const allSelected = currentRenderedData.length > 0 && currentRenderedData.every(d => d.selected);
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            if(selectAllBtn) selectAllBtn.checked = allSelected;
+
+            updateHighlightRow(); 
+        }
+
+        window.toggleAll = function(isChecked) {
+            currentRenderedData.forEach(item => { item.selected = isChecked; });
+            renderTable(currentRenderedData);
+        }
+
+        function applySearch() {
+            const loadingQuery = document.getElementById('searchLoading').value.toLowerCase();
+            const unloadingQuery = document.getElementById('searchUnloading').value.toLowerCase();
+            const tonnageQuery = document.getElementById('searchTonnage').value.toLowerCase();
+            
+            const viewMonth = document.getElementById('viewMonth').value; 
+
+            const filteredData = masterData.filter(item => {
+                const matchLoading = (item.loading_company.toLowerCase().includes(loadingQuery) || 
+                                      item.loading_address.toLowerCase().includes(loadingQuery));
+                const matchUnloading = (item.unloading_company.toLowerCase().includes(unloadingQuery) || 
+                                        item.unloading_address.toLowerCase().includes(unloadingQuery));
+                const matchTonnage = item.tonnage.toLowerCase().includes(tonnageQuery);
+                const matchMonth = viewMonth ? item.dispatch_datetime.startsWith(viewMonth) : true;
+
+                return matchLoading && matchUnloading && matchTonnage && matchMonth;
+            });
+
+            currentRenderedData = filteredData;
+            renderTable(currentRenderedData);
+        }
+
+        function clearSearch() {
+            document.getElementById('searchLoading').value = '';
+            document.getElementById('searchUnloading').value = '';
+            document.getElementById('searchTonnage').value = '';
+            
+            const today = new Date();
+            document.getElementById('viewMonth').value = today.toISOString().slice(0, 7);
+            
+            applySearch();
+        }
+
+        function showCopyToast() {
+            const toast = document.getElementById('copyToast');
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+        }
+
+        function triggerDateChanges() {
+            isSystemUpdate = true;
+            ['createdDate', 'dispatchDate', 'waypointArrivalDate', 'arrivalDate'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.dispatchEvent(new Event('change'));
+            });
+            isSystemUpdate = false;
+        }
+
+        function startEdit(id) {
+            if(isDraggingRow) return;
+
+            editingId = id;
+            const item = masterData.find(d => d.id === id);
+            if(!item) return;
+
+            document.getElementById('createdDate').value = item.created_date;
+            document.getElementById('creator').value = item.creator;
+            
+            const [dDate, dTime] = item.dispatch_datetime.split(' ');
+            const [dHour, dMin] = dTime.split(':');
+            document.getElementById('dispatchDate').value = dDate;
+            document.getElementById('dispatchHour').value = dHour;
+            document.getElementById('dispatchMinute').value = dMin;
+
+            const hasWaypoint = item.waypoint_company && item.waypoint_company !== '-';
+            const wpCheck = document.getElementById('useWaypointCheck');
+            wpCheck.checked = hasWaypoint;
+            toggleWaypointFields(hasWaypoint);
+
+            if (hasWaypoint) {
+                document.querySelectorAll('.waypoint-type').forEach(cb => {
+                    cb.checked = (cb.value === item.waypoint_type);
+                });
+
+                document.getElementById('waypointCompany').value = item.waypoint_company === '-' ? '' : item.waypoint_company;
+                document.getElementById('waypointAddress').value = item.waypoint_address === '-' ? '' : item.waypoint_address;
+                document.getElementById('waypointInfo').value = item.waypoint_info === '-' ? '' : item.waypoint_info;
+                
+                if(item.waypoint_arrival_datetime && item.waypoint_arrival_datetime !== '-') {
+                    const [wDate, wTime] = item.waypoint_arrival_datetime.split(' ');
+                    const [wHour, wMin] = wTime.split(':');
+                    document.getElementById('waypointArrivalDate').value = wDate;
+                    document.getElementById('waypointArrivalHour').value = wHour;
+                    document.getElementById('waypointArrivalMinute').value = wMin;
+                } else {
+                    document.getElementById('waypointArrivalDate').value = '';
+                    document.getElementById('waypointArrivalHour').value = '08';
+                    document.getElementById('waypointArrivalMinute').value = '00';
+                }
+            } else {
+                document.getElementById('waypointCompany').value = '';
+                document.getElementById('waypointAddress').value = '';
+                document.getElementById('waypointInfo').value = '';
+                document.getElementById('waypointArrivalDate').value = '';
+                document.querySelectorAll('.waypoint-type').forEach(cb => cb.checked = false);
+            }
+
+            document.getElementById('loadingCompany').value = item.loading_company;
+            document.getElementById('loadingAddress').value = item.loading_address;
+            document.getElementById('loadingInfo').value = item.loading_info;
+            
+            document.getElementById('unloadingCompany').value = item.unloading_company;
+            document.getElementById('unloadingAddress').value = item.unloading_address;
+            document.getElementById('unloadingInfo').value = item.unloading_info;
+            
+            document.getElementById('tonnage').value = item.tonnage;
+            document.getElementById('vehicleType').value = item.vehicleType || item.vehicle_type; 
+            document.getElementById('vehicleCount').value = item.vehicle_count;
+            
+            const [aDate, aTime] = item.arrival_datetime.split(' ');
+            const [aHour, aMin] = aTime.split(':');
+            document.getElementById('arrivalDate').value = aDate;
+            document.getElementById('arrivalHour').value = aHour;
+            document.getElementById('arrivalMinute').value = aMin;
+
+            document.getElementById('itemDetails').value = item.item_details;
+
+            const sDayCheck = document.getElementById('sameDayCheck');
+            sDayCheck.checked = item.is_same_day || false;
+            sDayCheck.dispatchEvent(new Event('change'));
+
+            triggerDateChanges(); 
+
+            document.getElementById('formContainer').className = "bg-orange-50 p-6 rounded-lg shadow-md border-2 border-orange-400 transition-all duration-300";
+            document.getElementById('formTitle').innerHTML = `배차 내역 수정 <span class="text-sm font-bold text-orange-600">(클라우드 연동)</span>`;
+            
+            const isCompleted = item.approval === '썬월드 완료' || item.approval === '백호 완료';
+            const submitBtn = document.getElementById('submitBtn');
+            if (isCompleted) {
+                submitBtn.innerText = "수정 불가 (결재 완료)";
+                submitBtn.disabled = true;
+                submitBtn.className = "flex-1 min-w-[200px] bg-gray-400 text-white py-3 rounded-md font-bold text-lg shadow cursor-not-allowed";
+            } else {
+                submitBtn.innerText = "수정 완료하기";
+                submitBtn.disabled = false;
+                submitBtn.className = "flex-1 min-w-[200px] bg-green-600 text-white py-3 rounded-md hover:bg-green-700 transition font-bold text-lg shadow";
+            }
+            
+            document.getElementById('copyNewBtn').classList.remove('hidden');
+            document.getElementById('deleteBtn').classList.remove('hidden');
+            document.getElementById('cancelBtn').classList.remove('hidden');
+
+            // 🚀 클릭 즉시 해당 항목(오렌지)을 포함하여 테이블 하이라이트 반영
+            updateHighlightRow();
+
+            document.getElementById('formContainer').scrollIntoView({ behavior: 'smooth' });
+
+            const displayDispatch = `${formatSlashDateTime(item.dispatch_datetime)}`;
+            const displayArrival = item.is_same_day ? `${getSlashDateString(aDate)}_당착` : `${formatSlashDateTime(item.arrival_datetime)}`;
+            
+            let waypointText = "";
+            if(hasWaypoint) {
+                let wpTypeDisplay = item.waypoint_type ? `[${item.waypoint_type}] ` : '';
+                let wpArrivalText = (item.waypoint_arrival_datetime && item.waypoint_arrival_datetime !== '-') 
+                    ? `\n- 도착일시: ${formatSlashDateTime(item.waypoint_arrival_datetime)}` 
+                    : '';
+                waypointText = `[경유]${wpArrivalText}\n- 상호/주소: ${wpTypeDisplay}${item.waypoint_company} (${item.waypoint_address})\n- 담당자: ${item.waypoint_info}\n\n`;
+            }
+
+            const copyContent = `[배차 신청서]
+[상차]
+- 상차일시: ${displayDispatch}
+- 상호/주소: ${item.loading_company} (${item.loading_address})
+- 담당자: ${item.loading_info}
+
+${waypointText}[하차]
+- 도착일시: ${displayArrival}
+- 상호/주소: ${item.unloading_company} (${item.unloading_address})
+- 담당자: ${item.unloading_info}
+
+[화물 정보]
+- 차량: ${item.tonnage} ${item.vehicle_type} (${item.vehicle_count}대)
+- 품목/비고: ${item.item_details}`;
+
+            if(navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(copyContent).then(() => { showCopyToast(); });
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = copyContent;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try { document.execCommand('copy'); showCopyToast(); } catch (err) {}
+                document.body.removeChild(textArea);
+            }
+        }
+
+        function copyToNew() {
+            editingId = null; 
+            document.getElementById('createdDate').valueAsDate = new Date(); 
+            triggerDateChanges();
+            
+            document.getElementById('formContainer').className = "bg-white p-6 rounded-lg shadow-md transition-all duration-300 border-2 border-emerald-400";
+            document.getElementById('formTitle').innerHTML = `신규 배차 등록 <span class="text-sm font-bold text-emerald-600">(선택한 내역 복사됨)</span>`;
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = false;
+            submitBtn.innerText = "배차 내역 등록하기";
+            submitBtn.className = "flex-1 min-w-[200px] bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition font-bold text-lg shadow";
+            
+            document.getElementById('copyNewBtn').classList.add('hidden');
+            document.getElementById('deleteBtn').classList.add('hidden');
+            document.getElementById('cancelBtn').classList.remove('hidden'); 
+            
+            // 🚀 복사 후 편집 모드가 해제되었으므로 하이라이트 취소
+            updateHighlightRow();
+
+            alert('기존 정보가 입력창에 복사되었습니다. 내용을 확인/수정 후 [배차 내역 등록하기]를 눌러주세요.');
+        }
+
+        function resetForm() {
+            editingId = null;
+            document.getElementById('dispatchForm').reset();
+            
+            const today = new Date();
+            document.getElementById('createdDate').valueAsDate = today;
+            document.getElementById('dispatchDate').valueAsDate = today;
+            document.getElementById('arrivalDate').valueAsDate = today;
+            document.getElementById('waypointArrivalDate').value = '';
+            
+            document.querySelectorAll('.waypoint-type').forEach(cb => cb.checked = false);
+            
+            document.getElementById('dispatchHour').value = "08";
+            document.getElementById('dispatchMinute').value = "00"; 
+            document.getElementById('arrivalHour').value = "18";
+            document.getElementById('arrivalMinute').value = "00";  
+            document.getElementById('waypointArrivalHour').value = "08";
+            document.getElementById('waypointArrivalMinute').value = "00";  
+            document.getElementById('vehicleType').value = "카고"; 
+            
+            const sDayCheck = document.getElementById('sameDayCheck');
+            sDayCheck.checked = false;
+            sDayCheck.dispatchEvent(new Event('change'));
+
+            triggerDateChanges(); 
+            
+            document.getElementById('formContainer').className = "bg-white p-6 rounded-lg shadow-md transition-all duration-300";
+            document.getElementById('formTitle').innerText = "신규 배차 등록";
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = false;
+            submitBtn.innerText = "배차 내역 등록하기";
+            submitBtn.className = "flex-1 min-w-[200px] bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition font-bold text-lg shadow";
+            
+            document.getElementById('copyNewBtn').classList.add('hidden');
+            document.getElementById('deleteBtn').classList.add('hidden');
+            document.getElementById('cancelBtn').classList.add('hidden');
+
+            // 🚀 폼 초기화 후 편집 모드가 해제되었으므로 하이라이트 취소
+            updateHighlightRow();
+        }
+
+        async function updateApproval(id, newApprovalStatus) {
+            const pwd = prompt('관리자 비밀번호를 입력하세요.');
+            if(pwd !== ADMIN_PWD) { 
+                alert("비밀번호가 일치하지 않습니다."); 
+                applySearch(); 
+                return; 
+            }
+            try { await dispatchesCol.doc(id).update({ approval: newApprovalStatus }); } 
+            catch (error) { console.error("결재 상태 변경 실패:", error); }
+        }
+
+        async function updateMemo(id, newMemo) {
+            const pwd = prompt('관리자 비밀번호를 입력하세요.');
+            if(pwd !== ADMIN_PWD) { 
+                alert("비밀번호가 일치하지 않습니다."); 
+                applySearch(); 
+                return; 
+            }
+            const safeMemo = newMemo || '-';
+            try {
+                await dispatchesCol.doc(id).update({ memo: safeMemo });
+                alert('특이사항(관리자 메모)이 저장되었습니다.');
+            } catch (error) { console.error("메모 저장 실패:", error); }
+        }
+
+        async function updateCost(id, newCost) {
+            const pwd = prompt('관리자 비밀번호를 입력하세요.');
+            if(pwd !== ADMIN_PWD) { 
+                alert("비밀번호가 일치하지 않습니다."); 
+                applySearch(); 
+                return; 
+            }
+            const safeCost = newCost || '-';
+            try {
+                await dispatchesCol.doc(id).update({ cost: safeCost });
+                alert('비용 내역이 저장되었습니다.');
+            } catch (error) { console.error("비용 저장 실패:", error); }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('dispatchTableBody');
+            tbody.innerHTML = '';
+            
+            const allSelected = data.length > 0 && data.every(d => d.selected);
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            if(selectAllBtn) selectAllBtn.checked = allSelected;
+
+            if(data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="19" class="p-4 text-center text-gray-500 font-semibold">조건에 맞는 배차 내역이 없습니다.</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                let rowBgClass = "text-center border-b border-gray-400 transition-colors cursor-pointer ";
+                const isCompleted = item.approval === '썬월드 완료' || item.approval === '백호 완료';
+                
+                // 🚀 우선순위 적용하여 초기 클래스 설정
+                if (item.id === editingId) {
+                    rowBgClass += "bg-orange-100 hover:bg-orange-200 font-semibold";
+                } else if (item.selected) {
+                    rowBgClass += "bg-yellow-100 hover:bg-yellow-200";
+                } else if (isCompleted) {
+                    rowBgClass += "bg-blue-50 hover:bg-blue-100";
+                } else {
+                    rowBgClass += "bg-white hover:bg-gray-100";
+                }
+                
+                const tr = document.createElement('tr');
+                tr.className = rowBgClass;
+                tr.setAttribute('draggable', 'true');
+                tr.setAttribute('data-id', item.id);
+                tr.setAttribute('ondragstart', `handleDragStart(event, '${item.id}')`);
+                tr.setAttribute('ondragend', `handleDragEnd(event)`);
+                tr.setAttribute('ondragover', `handleDragOver(event)`);
+                tr.setAttribute('ondragleave', `handleDragLeave(event)`);
+                tr.setAttribute('ondrop', `handleDrop(event, '${item.id}')`);
+                
+                tr.setAttribute('onclick', `startEdit('${item.id}')`);
+
+                const displayDispatchTime = formatDateTime(item.dispatch_datetime);
+                const arrivalDatePart = item.arrival_datetime ? item.arrival_datetime.split(' ')[0] : '';
+                const displayArrivalTime = item.is_same_day 
+                    ? `${formatDateOnly(arrivalDatePart)} <span class="text-red-600 font-bold border border-red-600 px-1 rounded bg-red-50 text-xs ml-1">당착</span>` 
+                    : formatDateTime(item.arrival_datetime);
+                
+                const wpCompanyDisplay = item.waypoint_type && item.waypoint_company !== '-' ? `<span class="text-emerald-700 font-bold">[${item.waypoint_type}]</span><br>${item.waypoint_company}` : (item.waypoint_company !== '-' ? item.waypoint_company : '');
+
+                tr.innerHTML = `
+                    <td class="p-2 border-r border-gray-400 text-center cursor-move text-gray-400 font-bold hover:text-blue-600 transition" title="드래그해서 순서를 변경하세요" onclick="event.stopPropagation()">
+                        ☰
+                    </td>
+                    <td class="p-2 border-r border-gray-400 text-center" onclick="event.stopPropagation()">
+                        <input type="checkbox" class="w-4 h-4 cursor-pointer" ${item.selected ? 'checked' : ''} onchange="toggleRow(this, '${item.id}', this.checked)">
+                    </td>
+                    <td class="p-2 border-r border-gray-400">${formatDateOnly(item.created_date)}</td>
+                    <td class="p-2 border-r border-gray-400 font-medium">${item.creator}</td>
+                    <td class="p-2 border-r border-gray-400 text-blue-800 font-semibold">${displayDispatchTime}</td>
+                    
+                    <td class="p-2 border-r border-gray-400">${item.loading_company}</td>
+                    <td class="p-2 border-r border-gray-400 text-xs text-gray-700 truncate max-w-[200px]" title="${item.loading_address}">${item.loading_address}</td>
+                    <td class="p-2 border-r border-gray-400 text-xs text-gray-600">${item.loading_info}</td>
+                    
+                    <td class="p-2 border-r border-gray-400">${wpCompanyDisplay}</td>
+                    <td class="p-2 border-r border-gray-400 text-xs text-gray-700 truncate max-w-[200px]" title="${item.waypoint_address}">${item.waypoint_address === '-' ? '' : item.waypoint_address}</td>
+                    <td class="p-2 border-r border-gray-400 text-xs text-gray-600">${item.waypoint_info === '-' ? '' : item.waypoint_info}</td>
+                    
+                    <td class="p-2 border-r border-gray-400">${item.unloading_company}</td>
+                    <td class="p-2 border-r border-gray-400 text-xs text-gray-700 truncate max-w-[200px]" title="${item.unloading_address}">${item.unloading_address}</td>
+                    <td class="p-2 border-r border-gray-400 text-xs text-gray-600">${item.unloading_info}</td>
+                    
+                    <td class="p-2 border-r border-gray-400 font-semibold">${item.tonnage}</td>
+                    <td class="p-2 border-r border-gray-400 text-blue-700 font-bold">${item.vehicle_type}</td>
+                    <td class="p-2 border-r border-gray-400 font-semibold">${item.vehicle_count}</td>
+                    <td class="p-2 border-r border-gray-400 text-gray-700 font-semibold">${displayArrivalTime}</td>
+                    
+                    <td class="p-2 border-r border-gray-400 text-left truncate max-w-[1800px]" title="${item.item_details}">${item.item_details}</td>
+                    
+                    <td class="p-2 border-r border-gray-400 text-center" onclick="event.stopPropagation()">
+                        <select 
+                            class="border border-gray-300 rounded p-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${isCompleted ? 'text-blue-600 bg-transparent border-none' : 'text-gray-600 bg-gray-50'}" 
+                            onchange="updateApproval('${item.id}', this.value)"
+                        >
+                            <option value="배차대기" ${item.approval === '배차대기' ? 'selected' : ''}>배차대기</option>
+                            <option value="썬월드 완료" ${item.approval === '썬월드 완료' ? 'selected' : ''}>썬월드 완료</option>
+                            <option value="백호 완료" ${item.approval === '백호 완료' ? 'selected' : ''}>백호 완료</option>
+                        </select>
+                    </td>
+
+                    <td class="p-2 border-r border-gray-400 text-center bg-red-50/50" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-center gap-1">
+                            <input type="text" class="border border-gray-300 rounded p-1 text-xs w-32 focus:outline-none focus:border-red-400" placeholder="메모 입력" value="${item.memo === '-' ? '' : item.memo}" onkeydown="if(event.key === 'Enter') updateMemo('${item.id}', this.value)">
+                            <button type="button" onclick="updateMemo('${item.id}', this.previousElementSibling.value)" class="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold hover:bg-red-600 transition shadow">저장</button>
+                        </div>
+                    </td>
+
+                    <td class="p-2 border-l border-gray-400 text-center bg-indigo-50/50" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-center gap-1">
+                            <input type="text" class="border border-gray-300 rounded p-1 text-xs w-24 focus:outline-none focus:border-indigo-400" placeholder="비용 입력" value="${item.cost && item.cost !== '-' ? item.cost : ''}" onkeydown="if(event.key === 'Enter') updateCost('${item.id}', this.value)">
+                            <button type="button" onclick="updateCost('${item.id}', this.previousElementSibling.value)" class="bg-indigo-500 text-white px-2 py-1 rounded text-xs font-bold hover:bg-indigo-600 transition shadow">저장</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            setTimeout(window.syncScrollWidth, 100);
+        }
+    </script>
+</body>
+</html>
