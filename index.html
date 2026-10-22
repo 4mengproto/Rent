@@ -39,7 +39,7 @@
 <body class="bg-gray-100 p-4 md:p-8 relative">
 
     <div class="max-w-[1600px] mx-auto space-y-6">
-        <!-- 🚀 헤더 영역: 주소록 버튼 추가 -->
+        <!-- 헤더 영역 -->
         <header class="bg-blue-800 text-white p-6 rounded-lg shadow-md relative flex items-center justify-center">
             <!-- 좌측 버튼 그룹 -->
             <div class="absolute left-6 flex items-center gap-2">
@@ -47,7 +47,7 @@
                     <span class="text-lg">🏠</span> 홈
                 </a>
                 <button type="button" onclick="openAddressBookModal()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg transition-colors font-bold text-sm shadow-sm">
-                    <span class="text-lg">📖</span> 주소록
+                    <span class="text-lg">📖</span> 주소록 관리
                 </button>
             </div>
             
@@ -134,7 +134,6 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700">업체명</label>
-                        <!-- 🚀 자동완성 datalist 연동 -->
                         <input type="text" id="loadingCompany" list="dlCompanies" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="업체명 검색/입력">
                     </div>
                     <div>
@@ -142,9 +141,8 @@
                         <input type="text" id="loadingAddress" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="상차지 주소 (자동입력)">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700">정보 (담당자/연락처)</label>
-                        <!-- 🚀 자동완성 datalist 연동 -->
-                        <input type="text" id="loadingInfo" list="dlContacts" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="담당자 검색/입력">
+                        <label class="block text-xs font-medium text-gray-700">담당자 정보 (이름/직급/연락처)</label>
+                        <input type="text" id="loadingInfo" list="dlContacts" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="예: 이원찬 책임(010-8449-9998)">
                     </div>
                 </div>
 
@@ -179,7 +177,6 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700">업체명</label>
-                        <!-- 🚀 자동완성 datalist 연동 -->
                         <input type="text" id="waypointCompany" list="dlCompanies" class="waypoint-field mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm bg-gray-200 text-gray-500 cursor-not-allowed" placeholder="경유지 업체명" disabled>
                     </div>
                     <div>
@@ -187,9 +184,8 @@
                         <input type="text" id="waypointAddress" class="waypoint-field mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm bg-gray-200 text-gray-500 cursor-not-allowed" placeholder="경유지 주소 (자동입력)" disabled>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700">정보 (담당자/연락처)</label>
-                        <!-- 🚀 자동완성 datalist 연동 -->
-                        <input type="text" id="waypointInfo" list="dlContacts" class="waypoint-field mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm bg-gray-200 text-gray-500 cursor-not-allowed" placeholder="경유지 담당자/연락처" disabled>
+                        <label class="block text-xs font-medium text-gray-700">담당자 정보 (이름/직급/연락처)</label>
+                        <input type="text" id="waypointInfo" list="dlContacts" class="waypoint-field mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm bg-gray-200 text-gray-500 cursor-not-allowed" placeholder="경유지 담당자 정보" disabled>
                     </div>
                 </div>
 
@@ -215,7 +211,6 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700">업체명</label>
-                        <!-- 🚀 자동완성 datalist 연동 -->
                         <input type="text" id="unloadingCompany" list="dlCompanies" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="업체명 검색/입력">
                     </div>
                     <div>
@@ -223,9 +218,8 @@
                         <input type="text" id="unloadingAddress" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="하차지 주소 (자동입력)">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700">정보 (담당자/연락처)</label>
-                        <!-- 🚀 자동완성 datalist 연동 -->
-                        <input type="text" id="unloadingInfo" list="dlContacts" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="담당자 검색/입력">
+                        <label class="block text-xs font-medium text-gray-700">담당자 정보 (이름/직급/연락처)</label>
+                        <input type="text" id="unloadingInfo" list="dlContacts" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="예: 이원찬 책임(010-8449-9998)">
                     </div>
                 </div>
 
@@ -334,15 +328,15 @@
                             
                             <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">업체명</th>
                             <th class="p-2 border-r border-gray-400 bg-[#d1f4f9] text-blue-700">주소</th>
-                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">정보<br>(담당자/연락처)</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">담당자 정보<br>(이름/직급/연락처)</th>
                             
                             <th class="p-2 border-r border-gray-400 bg-[#ffe5a0]">업체명</th>
                             <th class="p-2 border-r border-gray-400 bg-[#ffe5a0] text-blue-700">주소</th>
-                            <th class="p-2 border-r border-gray-400 bg-[#ffe5a0]">정보<br>(담당자/연락처)</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#ffe5a0]">담당자 정보<br>(이름/직급/연락처)</th>
                             
                             <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">업체명</th>
                             <th class="p-2 border-r border-gray-400 bg-[#d1f4f9] text-blue-700">주소</th>
-                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">정보<br>(담당자/연락처)</th>
+                            <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">담당자 정보<br>(이름/직급/연락처)</th>
                             
                             <th class="p-2 border-r border-gray-400 bg-[#d1f4f9]">신청톤</th>
                             <th class="p-2 border-r border-gray-400 bg-[#d1f4f9] text-blue-700">차종</th>
@@ -358,39 +352,48 @@
         </div>
     </div>
 
-    <!-- 🚀 주소록 관리 모달 -->
+    <!-- 주소록 관리 모달 -->
     <div id="addressBookModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[100]">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[85vh] flex flex-col m-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[85vh] flex flex-col m-4">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg">
                 <h2 class="text-lg font-bold text-gray-800">📖 주소록 관리</h2>
                 <button onclick="closeAddressBookModal()" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
-            <div class="p-4 flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="p-4 flex-1 overflow-y-hidden grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- 업체 주소록 -->
-                <div class="border rounded p-4 bg-blue-50/30">
-                    <h3 class="font-bold text-blue-800 mb-3 border-b pb-2">🏢 업체 및 주소</h3>
+                <div class="border rounded p-4 bg-blue-50/30 flex flex-col h-full">
+                    <h3 class="font-bold text-blue-800 mb-3 border-b pb-2 flex justify-between items-center">
+                        <span>🏢 업체 및 주소</span>
+                        <input type="text" id="searchComp" oninput="renderAddressBook()" placeholder="업체/주소 검색" class="border border-gray-300 rounded p-1 text-xs font-normal focus:outline-none focus:border-blue-400">
+                    </h3>
                     <div class="flex gap-2 mb-4">
                         <input type="text" id="newCompName" placeholder="업체명" class="border border-gray-300 focus:border-blue-400 focus:outline-none p-1.5 text-sm rounded w-1/3">
                         <input type="text" id="newCompAddr" placeholder="주소" class="border border-gray-300 focus:border-blue-400 focus:outline-none p-1.5 text-sm rounded flex-1">
-                        <button onclick="addCompany()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-bold shrink-0 shadow">추가</button>
+                        <button type="button" id="btnSaveComp" onclick="saveCompany()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-bold shrink-0 shadow">추가</button>
+                        <button type="button" id="btnCancelComp" onclick="cancelEditComp()" class="hidden bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm font-bold shrink-0 shadow">취소</button>
                     </div>
-                    <ul id="companyListUI" class="space-y-2 text-sm max-h-[50vh] overflow-y-auto pr-2"></ul>
+                    <ul id="companyListUI" class="space-y-2 text-sm overflow-y-auto pr-2 flex-1"></ul>
                 </div>
                 <!-- 담당자 명단 -->
-                <div class="border rounded p-4 bg-emerald-50/30">
-                    <h3 class="font-bold text-emerald-800 mb-3 border-b pb-2">👤 담당자 명단</h3>
+                <div class="border rounded p-4 bg-emerald-50/30 flex flex-col h-full">
+                    <h3 class="font-bold text-emerald-800 mb-3 border-b pb-2 flex justify-between items-center">
+                        <span>👤 담당자 명단</span>
+                        <input type="text" id="searchCont" oninput="renderAddressBook()" placeholder="이름/연락처 검색" class="border border-gray-300 rounded p-1 text-xs font-normal focus:outline-none focus:border-emerald-400">
+                    </h3>
                     <div class="flex gap-2 mb-4">
-                        <input type="text" id="newContactName" placeholder="이름" class="border border-gray-300 focus:border-emerald-400 focus:outline-none p-1.5 text-sm rounded w-1/3">
-                        <input type="text" id="newContactPhone" placeholder="연락처" class="border border-gray-300 focus:border-emerald-400 focus:outline-none p-1.5 text-sm rounded flex-1">
-                        <button onclick="addContact()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-sm font-bold shrink-0 shadow">추가</button>
+                        <input type="text" id="newContactName" placeholder="이름" class="border border-gray-300 focus:border-emerald-400 focus:outline-none p-1.5 text-sm rounded w-1/4">
+                        <input type="text" id="newContactTitle" placeholder="직급" class="border border-gray-300 focus:border-emerald-400 focus:outline-none p-1.5 text-sm rounded w-1/4">
+                        <input type="text" id="newContactPhone" placeholder="연락처 (자동 하이픈)" class="border border-gray-300 focus:border-emerald-400 focus:outline-none p-1.5 text-sm rounded flex-1">
+                        <button type="button" id="btnSaveCont" onclick="saveContact()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-sm font-bold shrink-0 shadow">추가</button>
+                        <button type="button" id="btnCancelCont" onclick="cancelEditCont()" class="hidden bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm font-bold shrink-0 shadow">취소</button>
                     </div>
-                    <ul id="contactListUI" class="space-y-2 text-sm max-h-[50vh] overflow-y-auto pr-2"></ul>
+                    <ul id="contactListUI" class="space-y-2 text-sm overflow-y-auto pr-2 flex-1"></ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 🚀 자동완성 Datalist -->
+    <!-- 자동완성 Datalist -->
     <datalist id="dlCompanies"></datalist>
     <datalist id="dlContacts"></datalist>
 
@@ -421,7 +424,6 @@
         const db = firebase.firestore();
         const dispatchesCol = db.collection("dispatches");
         
-        // 🚀 주소록 컬렉션 참조
         const compCol = db.collection("address_companies");
         const contCol = db.collection("address_contacts");
 
@@ -432,15 +434,37 @@
         let companiesData = [];
         let contactsData = [];
         
+        let editingCompId = null;
+        let editingContId = null;
+
         const ADMIN_PWD = "140916"; 
 
         let isDraggingRow = false;
         let pendingUpdate = false;
         let draggedItemId = null;
-        
         let isSystemUpdate = false; 
 
-        // 클릭 하이라이트 동기화 함수
+        // 전화번호 자동 하이픈 변환 함수
+        function autoHyphenPhone(str) {
+            str = str.replace(/[^0-9]/g, '');
+            let tmp = '';
+            if (str.startsWith('02')) {
+                if (str.length < 3) return str;
+                if (str.length < 6) return str.substr(0, 2) + '-' + str.substr(2);
+                if (str.length < 10) return str.substr(0, 2) + '-' + str.substr(2, 3) + '-' + str.substr(5);
+                return str.substr(0, 2) + '-' + str.substr(2, 4) + '-' + str.substr(6);
+            } else if (str.startsWith('1')) { 
+                if (str.length < 5) return str;
+                if (str.length < 9) return str.substr(0, 4) + '-' + str.substr(4);
+                return str.substr(0, 4) + '-' + str.substr(4, 4);
+            } else {
+                if (str.length < 4) return str;
+                if (str.length < 7) return str.substr(0, 3) + '-' + str.substr(3);
+                if (str.length < 11) return str.substr(0, 3) + '-' + str.substr(3, 3) + '-' + str.substr(6);
+                return str.substr(0, 3) + '-' + str.substr(3, 4) + '-' + str.substr(7);
+            }
+        }
+
         window.updateHighlightRow = function() {
             const trs = document.querySelectorAll('#dispatchTableBody tr');
             trs.forEach(tr => {
@@ -596,72 +620,174 @@
             }
         }
 
-        // 🚀 주소록 모달 제어 함수
         window.openAddressBookModal = function() {
             document.getElementById('addressBookModal').classList.remove('hidden');
             document.getElementById('addressBookModal').classList.add('flex');
+            cancelEditComp();
+            cancelEditCont();
         }
         window.closeAddressBookModal = function() {
             document.getElementById('addressBookModal').classList.add('hidden');
             document.getElementById('addressBookModal').classList.remove('flex');
         }
 
-        // 🚀 주소록 업체 추가
-        window.addCompany = async function() {
+        window.saveCompany = async function() {
             const name = document.getElementById('newCompName').value.trim();
             const address = document.getElementById('newCompAddr').value.trim();
             if(!name || !address) return alert("업체명과 주소를 모두 입력하세요.");
-            await compCol.add({ name, address, created_at: Date.now() });
-            document.getElementById('newCompName').value = '';
-            document.getElementById('newCompAddr').value = '';
+
+            if (editingCompId) {
+                const isDuplicate = companiesData.some(c => c.id !== editingCompId && c.name === name && c.address === address);
+                if(isDuplicate) return alert("이미 동일한 이름과 주소로 등록된 업체가 존재합니다.");
+                
+                await compCol.doc(editingCompId).update({ name, address });
+                cancelEditComp();
+            } else {
+                const isDuplicate = companiesData.some(c => c.name === name && c.address === address);
+                if(isDuplicate) return alert("이미 동일한 이름과 주소로 등록된 업체가 존재합니다.");
+
+                await compCol.add({ name, address, created_at: Date.now() });
+                document.getElementById('newCompName').value = '';
+                document.getElementById('newCompAddr').value = '';
+            }
         }
 
-        // 🚀 주소록 업체 삭제
+        window.editCompany = function(id) {
+            const c = companiesData.find(x => x.id === id);
+            if(!c) return;
+            editingCompId = id;
+            document.getElementById('newCompName').value = c.name;
+            document.getElementById('newCompAddr').value = c.address;
+            
+            const btnSave = document.getElementById('btnSaveComp');
+            btnSave.innerText = "수정";
+            btnSave.classList.replace('bg-blue-600', 'bg-orange-500');
+            btnSave.classList.replace('hover:bg-blue-700', 'hover:bg-orange-600');
+            document.getElementById('btnCancelComp').classList.remove('hidden');
+        }
+
+        window.cancelEditComp = function() {
+            editingCompId = null;
+            document.getElementById('newCompName').value = '';
+            document.getElementById('newCompAddr').value = '';
+            
+            const btnSave = document.getElementById('btnSaveComp');
+            btnSave.innerText = "추가";
+            btnSave.classList.replace('bg-orange-500', 'bg-blue-600');
+            btnSave.classList.replace('hover:bg-orange-600', 'hover:bg-blue-700');
+            document.getElementById('btnCancelComp').classList.add('hidden');
+        }
+
         window.deleteCompany = async function(id) {
             if(confirm("해당 업체를 주소록에서 삭제하시겠습니까?")) await compCol.doc(id).delete();
         }
 
-        // 🚀 주소록 담당자 추가
-        window.addContact = async function() {
+        window.saveContact = async function() {
             const name = document.getElementById('newContactName').value.trim();
-            const phone = document.getElementById('newContactPhone').value.trim();
+            const title = document.getElementById('newContactTitle').value.trim();
+            let phone = document.getElementById('newContactPhone').value.trim();
             if(!name || !phone) return alert("담당자 이름과 연락처를 모두 입력하세요.");
-            await contCol.add({ name, phone, created_at: Date.now() });
-            document.getElementById('newContactName').value = '';
-            document.getElementById('newContactPhone').value = '';
+
+            phone = autoHyphenPhone(phone);
+            const normalizedInputPhone = phone.replace(/[^0-9]/g, '');
+
+            if (editingContId) {
+                const isDuplicate = contactsData.some(c => 
+                    c.id !== editingContId && 
+                    c.name === name && 
+                    c.phone.replace(/[^0-9]/g, '') === normalizedInputPhone
+                );
+                if(isDuplicate) return alert("이미 동일한 이름과 연락처를 가진 담당자가 존재합니다.");
+                
+                await contCol.doc(editingContId).update({ name, title, phone });
+                cancelEditCont();
+            } else {
+                const isDuplicate = contactsData.some(c => 
+                    c.name === name && 
+                    c.phone.replace(/[^0-9]/g, '') === normalizedInputPhone
+                );
+                if(isDuplicate) return alert("이미 동일한 이름과 연락처를 가진 담당자가 존재합니다.");
+
+                await contCol.add({ name, title, phone, created_at: Date.now() });
+                document.getElementById('newContactName').value = '';
+                document.getElementById('newContactTitle').value = '';
+                document.getElementById('newContactPhone').value = '';
+            }
         }
 
-        // 🚀 주소록 담당자 삭제
+        window.editContact = function(id) {
+            const c = contactsData.find(x => x.id === id);
+            if(!c) return;
+            editingContId = id;
+            document.getElementById('newContactName').value = c.name;
+            document.getElementById('newContactTitle').value = c.title || '';
+            document.getElementById('newContactPhone').value = c.phone;
+            
+            const btnSave = document.getElementById('btnSaveCont');
+            btnSave.innerText = "수정";
+            btnSave.classList.replace('bg-emerald-600', 'bg-orange-500');
+            btnSave.classList.replace('hover:bg-emerald-700', 'hover:bg-orange-600');
+            document.getElementById('btnCancelCont').classList.remove('hidden');
+        }
+
+        window.cancelEditCont = function() {
+            editingContId = null;
+            document.getElementById('newContactName').value = '';
+            document.getElementById('newContactTitle').value = '';
+            document.getElementById('newContactPhone').value = '';
+            
+            const btnSave = document.getElementById('btnSaveCont');
+            btnSave.innerText = "추가";
+            btnSave.classList.replace('bg-orange-500', 'bg-emerald-600');
+            btnSave.classList.replace('hover:bg-orange-600', 'hover:bg-emerald-700');
+            document.getElementById('btnCancelCont').classList.add('hidden');
+        }
+
         window.deleteContact = async function(id) {
             if(confirm("해당 담당자를 주소록에서 삭제하시겠습니까?")) await contCol.doc(id).delete();
         }
 
-        // 🚀 주소록 데이터 렌더링 및 Datalist 업데이트
-        function renderAddressBook() {
+        window.renderAddressBook = function() {
             const dlComp = document.getElementById('dlCompanies');
-            dlComp.innerHTML = companiesData.map(c => `<option value="${c.name}"></option>`).join('');
+            dlComp.innerHTML = companiesData.map(c => `<option value="${c.name}">${c.address}</option>`).join('');
             
             const dlCont = document.getElementById('dlContacts');
-            dlCont.innerHTML = contactsData.map(c => `<option value="${c.name} / ${c.phone}"></option>`).join('');
+            dlCont.innerHTML = contactsData.map(c => {
+                const t = c.title ? ` ${c.title}` : '';
+                return `<option value="${c.name}${t}(${c.phone})"></option>`;
+            }).join('');
 
+            const compQuery = (document.getElementById('searchComp')?.value || '').toLowerCase();
+            const filteredComps = companiesData.filter(c => c.name.toLowerCase().includes(compQuery) || c.address.toLowerCase().includes(compQuery));
+            
             const compUI = document.getElementById('companyListUI');
-            compUI.innerHTML = companiesData.map(c => `
+            compUI.innerHTML = filteredComps.map(c => `
                 <li class="flex justify-between items-center bg-white p-2 rounded border shadow-sm">
-                    <div class="truncate flex-1"><span class="font-bold text-blue-700">${c.name}</span><br><span class="text-xs text-gray-500">${c.address}</span></div>
-                    <button type="button" onclick="deleteCompany('${c.id}')" class="text-red-500 hover:text-red-700 ml-2 px-2 py-1">❌</button>
+                    <div class="truncate flex-1 pr-2"><span class="font-bold text-blue-700">${c.name}</span><br><span class="text-xs text-gray-500">${c.address}</span></div>
+                    <div class="flex gap-1 shrink-0">
+                        <button type="button" onclick="editCompany('${c.id}')" class="text-blue-500 hover:text-blue-700 px-1.5 py-1 text-lg">✏️</button>
+                        <button type="button" onclick="deleteCompany('${c.id}')" class="text-red-500 hover:text-red-700 px-1.5 py-1 text-lg">❌</button>
+                    </div>
                 </li>
             `).join('');
+
+            const contQuery = (document.getElementById('searchCont')?.value || '').toLowerCase();
+            const filteredConts = contactsData.filter(c => c.name.toLowerCase().includes(contQuery) || c.phone.toLowerCase().includes(contQuery));
 
             const contUI = document.getElementById('contactListUI');
-            contUI.innerHTML = contactsData.map(c => `
+            contUI.innerHTML = filteredConts.map(c => {
+                const t = c.title ? ` <span class="text-xs text-emerald-600 font-normal">(${c.title})</span>` : '';
+                return `
                 <li class="flex justify-between items-center bg-white p-2 rounded border shadow-sm">
-                    <div class="truncate flex-1"><span class="font-bold text-emerald-700">${c.name}</span><br><span class="text-xs text-gray-500">${c.phone}</span></div>
-                    <button type="button" onclick="deleteContact('${c.id}')" class="text-red-500 hover:text-red-700 ml-2 px-2 py-1">❌</button>
+                    <div class="truncate flex-1 pr-2"><span class="font-bold text-emerald-700">${c.name}</span>${t}<br><span class="text-xs text-gray-500">${c.phone}</span></div>
+                    <div class="flex gap-1 shrink-0">
+                        <button type="button" onclick="editContact('${c.id}')" class="text-blue-500 hover:text-blue-700 px-1.5 py-1 text-lg">✏️</button>
+                        <button type="button" onclick="deleteContact('${c.id}')" class="text-red-500 hover:text-red-700 px-1.5 py-1 text-lg">❌</button>
+                    </div>
                 </li>
-            `).join('');
+            `}).join('');
         }
 
-        // 🚀 주소록 데이터 실시간 연동
         function fetchAddressBook() {
             compCol.orderBy("created_at", "desc").onSnapshot(snap => {
                 companiesData = [];
@@ -683,7 +809,6 @@
             });
         }
 
-        // 🚀 주소 자동입력 이벤트 헬퍼
         function handleCompanyAutoFill(e, targetAddressId) {
             const val = e.target.value;
             const found = companiesData.find(c => c.name === val);
@@ -693,12 +818,18 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            fetchAddressBook(); // 🚀 주소록 데이터 로드
+            fetchAddressBook();
 
-            // 🚀 업체명 입력 시 주소 자동입력 이벤트 연결
             document.getElementById('loadingCompany').addEventListener('input', (e) => handleCompanyAutoFill(e, 'loadingAddress'));
             document.getElementById('waypointCompany').addEventListener('input', (e) => handleCompanyAutoFill(e, 'waypointAddress'));
             document.getElementById('unloadingCompany').addEventListener('input', (e) => handleCompanyAutoFill(e, 'unloadingAddress'));
+
+            const phoneInput = document.getElementById('newContactPhone');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function() {
+                    this.value = autoHyphenPhone(this.value);
+                });
+            }
 
             const hourOptions = Array.from({length: 24}, (_, i) => {
                 const h = String(i).padStart(2, '0');
@@ -867,6 +998,70 @@
             document.getElementById('dispatchForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
+                // 🚀 폼 저장 전 신규 업체/담당자 검증 및 주소록 자동 등록 로직
+                const companiesToCheck = [
+                    { name: document.getElementById('loadingCompany').value.trim(), address: document.getElementById('loadingAddress').value.trim() },
+                    { name: document.getElementById('unloadingCompany').value.trim(), address: document.getElementById('unloadingAddress').value.trim() }
+                ];
+                if (document.getElementById('useWaypointCheck').checked) {
+                    companiesToCheck.push({ name: document.getElementById('waypointCompany').value.trim(), address: document.getElementById('waypointAddress').value.trim() });
+                }
+
+                for (let comp of companiesToCheck) {
+                    if (!comp.name || comp.name === '-') continue;
+                    const exists = companiesData.some(c => c.name === comp.name && c.address === comp.address);
+                    if (!exists) {
+                        if (confirm(`'${comp.name}' (주소: ${comp.address || '없음'}) 정보가 주소록에 없습니다.\n신규 배송지로 등록하시겠습니까?`)) {
+                            await compCol.add({ name: comp.name, address: comp.address || '', created_at: Date.now() });
+                        }
+                    }
+                }
+
+                const contactsToCheck = [
+                    document.getElementById('loadingInfo').value.trim(),
+                    document.getElementById('unloadingInfo').value.trim()
+                ];
+                if (document.getElementById('useWaypointCheck').checked) {
+                    contactsToCheck.push(document.getElementById('waypointInfo').value.trim());
+                }
+
+                for (let info of contactsToCheck) {
+                    if (!info || info === '-') continue;
+                    
+                    const exactMatch = contactsData.some(c => {
+                        const t = c.title ? ` ${c.title}` : '';
+                        return `${c.name}${t}(${c.phone})` === info;
+                    });
+
+                    if (exactMatch) continue;
+
+                    let phoneMatch = info.match(/[0-9]{2,3}-?[0-9]{3,4}-?[0-9]{4}/);
+                    let phone = phoneMatch ? autoHyphenPhone(phoneMatch[0]) : '';
+                    let namePart = phoneMatch ? info.replace(phoneMatch[0], '').replace(/[()]/g, '').trim() : info.trim();
+                    
+                    let parts = namePart.split(/\s+/);
+                    let name = parts[0] || '';
+                    let title = parts.slice(1).join(' ') || '';
+
+                    if (!name && !phone) continue;
+
+                    const normalizedInputPhone = phone.replace(/[^0-9]/g, '');
+                    let isDuplicate = false;
+                    
+                    if (normalizedInputPhone) {
+                        isDuplicate = contactsData.some(c => c.phone.replace(/[^0-9]/g, '') === normalizedInputPhone && c.name === name);
+                    } else {
+                        isDuplicate = contactsData.some(c => c.name === name);
+                    }
+
+                    if (!isDuplicate) {
+                        if (confirm(`'${info}' 담당자 정보가 주소록에 없습니다.\n신규 담당자로 등록하시겠습니까?`)) {
+                            await contCol.add({ name, title, phone, created_at: Date.now() });
+                        }
+                    }
+                }
+                // 🚀 신규 검증 로직 종료
+
                 const dispatchStr = `${document.getElementById('dispatchDate').value} ${document.getElementById('dispatchHour').value}:${document.getElementById('dispatchMinute').value}`;
                 const arrivalStr = `${document.getElementById('arrivalDate').value} ${document.getElementById('arrivalHour').value}:${document.getElementById('arrivalMinute').value}`;
                 
