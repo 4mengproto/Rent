@@ -21,7 +21,7 @@
         
         /* 드래그 앤 드롭 시 타겟 행 강조 효과 */
         .drag-over {
-            background-color: #dbeafe !important;
+            background-color: #dbeafe !important; /* bg-blue-100 */
             border-top: 2px dashed #2563eb !important;
             border-bottom: 2px dashed #2563eb !important;
         }
@@ -133,7 +133,11 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700">업체명</label>
+                        <!-- 🚀 상차지 업체명 버튼 -->
+                        <label class="flex justify-between items-end text-xs font-medium text-gray-700">
+                            <span>업체명</span>
+                            <button type="button" id="quickSaveComp_loading" tabindex="-1" onclick="quickSaveCompany('loading')" class="text-[10px] bg-blue-50 text-blue-600 hover:bg-blue-100 px-1.5 py-0.5 rounded border border-blue-200 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">➕ 주소록 등록</button>
+                        </label>
                         <input type="text" id="loadingCompany" list="dlCompanies" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="업체명 검색/입력">
                     </div>
                     <div>
@@ -141,7 +145,11 @@
                         <input type="text" id="loadingAddress" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="상차지 주소 (자동입력)">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700">담당자 정보 (이름/직급/연락처)</label>
+                        <!-- 🚀 상차지 담당자 버튼 -->
+                        <label class="flex justify-between items-end text-xs font-medium text-gray-700">
+                            <span>담당자 정보 (이름/직급/연락처)</span>
+                            <button type="button" id="quickSaveCont_loading" tabindex="-1" onclick="quickSaveContact('loading')" class="text-[10px] bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">➕ 명단 등록</button>
+                        </label>
                         <input type="text" id="loadingInfo" list="dlContacts" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="예: 이원찬 책임(010-8449-9998)">
                     </div>
                 </div>
@@ -176,7 +184,11 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700">업체명</label>
+                        <!-- 🚀 경유지 업체명 버튼 -->
+                        <label class="flex justify-between items-end text-xs font-medium text-gray-700">
+                            <span>업체명</span>
+                            <button type="button" id="quickSaveComp_waypoint" tabindex="-1" onclick="quickSaveCompany('waypoint')" class="waypoint-field text-[10px] bg-blue-50 text-blue-600 hover:bg-blue-100 px-1.5 py-0.5 rounded border border-blue-200 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>➕ 주소록 등록</button>
+                        </label>
                         <input type="text" id="waypointCompany" list="dlCompanies" class="waypoint-field mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm bg-gray-200 text-gray-500 cursor-not-allowed" placeholder="경유지 업체명" disabled>
                     </div>
                     <div>
@@ -184,7 +196,11 @@
                         <input type="text" id="waypointAddress" class="waypoint-field mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm bg-gray-200 text-gray-500 cursor-not-allowed" placeholder="경유지 주소 (자동입력)" disabled>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700">담당자 정보 (이름/직급/연락처)</label>
+                        <!-- 🚀 경유지 담당자 버튼 -->
+                        <label class="flex justify-between items-end text-xs font-medium text-gray-700">
+                            <span>담당자 정보 (이름/직급/연락처)</span>
+                            <button type="button" id="quickSaveCont_waypoint" tabindex="-1" onclick="quickSaveContact('waypoint')" class="waypoint-field text-[10px] bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>➕ 명단 등록</button>
+                        </label>
                         <input type="text" id="waypointInfo" list="dlContacts" class="waypoint-field mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm bg-gray-200 text-gray-500 cursor-not-allowed" placeholder="경유지 담당자 정보" disabled>
                     </div>
                 </div>
@@ -210,7 +226,11 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700">업체명</label>
+                        <!-- 🚀 하차지 업체명 버튼 -->
+                        <label class="flex justify-between items-end text-xs font-medium text-gray-700">
+                            <span>업체명</span>
+                            <button type="button" id="quickSaveComp_unloading" tabindex="-1" onclick="quickSaveCompany('unloading')" class="text-[10px] bg-blue-50 text-blue-600 hover:bg-blue-100 px-1.5 py-0.5 rounded border border-blue-200 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">➕ 주소록 등록</button>
+                        </label>
                         <input type="text" id="unloadingCompany" list="dlCompanies" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="업체명 검색/입력">
                     </div>
                     <div>
@@ -218,7 +238,11 @@
                         <input type="text" id="unloadingAddress" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="하차지 주소 (자동입력)">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700">담당자 정보 (이름/직급/연락처)</label>
+                        <!-- 🚀 하차지 담당자 버튼 -->
+                        <label class="flex justify-between items-end text-xs font-medium text-gray-700">
+                            <span>담당자 정보 (이름/직급/연락처)</span>
+                            <button type="button" id="quickSaveCont_unloading" tabindex="-1" onclick="quickSaveContact('unloading')" class="text-[10px] bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">➕ 명단 등록</button>
+                        </label>
                         <input type="text" id="unloadingInfo" list="dlContacts" required class="mt-1 block w-full border border-gray-300 rounded p-1.5 text-sm" placeholder="예: 이원찬 책임(010-8449-9998)">
                     </div>
                 </div>
@@ -383,7 +407,7 @@
                     <div class="flex gap-2 mb-4">
                         <input type="text" id="newContactName" placeholder="이름" class="border border-gray-300 focus:border-emerald-400 focus:outline-none p-1.5 text-sm rounded w-1/4">
                         <input type="text" id="newContactTitle" placeholder="직급" class="border border-gray-300 focus:border-emerald-400 focus:outline-none p-1.5 text-sm rounded w-1/4">
-                        <input type="text" id="newContactPhone" placeholder="연락처 (자동 하이픈)" class="border border-gray-300 focus:border-emerald-400 focus:outline-none p-1.5 text-sm rounded flex-1">
+                        <input type="text" id="newContactPhone" placeholder="연락처" class="border border-gray-300 focus:border-emerald-400 focus:outline-none p-1.5 text-sm rounded flex-1">
                         <button type="button" id="btnSaveCont" onclick="saveContact()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-sm font-bold shrink-0 shadow">추가</button>
                         <button type="button" id="btnCancelCont" onclick="cancelEditCont()" class="hidden bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm font-bold shrink-0 shadow">취소</button>
                     </div>
@@ -444,7 +468,7 @@
         let draggedItemId = null;
         let isSystemUpdate = false; 
 
-        // 전화번호 자동 하이픈 변환 함수
+        // 전화번호 자동 하이픈 변환
         function autoHyphenPhone(str) {
             str = str.replace(/[^0-9]/g, '');
             let tmp = '';
@@ -462,6 +486,102 @@
                 if (str.length < 7) return str.substr(0, 3) + '-' + str.substr(3);
                 if (str.length < 11) return str.substr(0, 3) + '-' + str.substr(3, 3) + '-' + str.substr(6);
                 return str.substr(0, 3) + '-' + str.substr(3, 4) + '-' + str.substr(7);
+            }
+        }
+
+        // 🚀 실시간 버튼 활성화/비활성화 검증 함수
+        window.validateQuickSaveCompany = function(prefix) {
+            const btn = document.getElementById('quickSaveComp_' + prefix);
+            if (!btn) return;
+            const name = document.getElementById(prefix + 'Company').value.trim();
+            const address = document.getElementById(prefix + 'Address').value.trim();
+            
+            if (!name || name === '-') {
+                btn.disabled = true;
+                return;
+            }
+            
+            const isDuplicate = companiesData.some(c => c.name === name && c.address === address);
+            btn.disabled = isDuplicate;
+        };
+
+        window.validateQuickSaveContact = function(prefix) {
+            const btn = document.getElementById('quickSaveCont_' + prefix);
+            if (!btn) return;
+            const info = document.getElementById(prefix + 'Info').value.trim();
+            
+            if (!info || info === '-') {
+                btn.disabled = true;
+                return;
+            }
+
+            let phoneMatch = info.match(/[0-9]{2,3}-?[0-9]{3,4}-?[0-9]{4}/);
+            let phone = phoneMatch ? autoHyphenPhone(phoneMatch[0]) : '';
+            let namePart = phoneMatch ? info.replace(phoneMatch[0], '').replace(/[()]/g, '').trim() : info.trim();
+            let parts = namePart.split(/\s+/);
+            let name = parts[0] || '';
+
+            if (!name && !phone) {
+                btn.disabled = true;
+                return;
+            }
+
+            const normalizedInputPhone = phone.replace(/[^0-9]/g, '');
+            let isDuplicate = false;
+            
+            if (normalizedInputPhone) {
+                isDuplicate = contactsData.some(c => c.phone.replace(/[^0-9]/g, '') === normalizedInputPhone && c.name === name);
+            } else {
+                isDuplicate = contactsData.some(c => c.name === name);
+            }
+            
+            const exactMatch = contactsData.some(c => {
+                const t = c.title ? ` ${c.title}` : '';
+                return `${c.name}${t}(${c.phone})` === info;
+            });
+
+            btn.disabled = isDuplicate || exactMatch;
+        };
+
+        window.validateAllQuickSaves = function() {
+            ['loading', 'waypoint', 'unloading'].forEach(prefix => {
+                validateQuickSaveCompany(prefix);
+                validateQuickSaveContact(prefix);
+            });
+        };
+
+        // 폼 내 빠른 주소록 등록
+        window.quickSaveCompany = async function(prefix) {
+            const name = document.getElementById(prefix + 'Company').value.trim();
+            const address = document.getElementById(prefix + 'Address').value.trim();
+            
+            try {
+                await compCol.add({ name, address, created_at: Date.now() });
+                alert(`'${name}' 업체가 주소록에 등록되었습니다.`);
+                validateQuickSaveCompany(prefix);
+            } catch (err) {
+                console.error(err);
+                alert("등록에 실패했습니다.");
+            }
+        }
+
+        window.quickSaveContact = async function(prefix) {
+            const info = document.getElementById(prefix + 'Info').value.trim();
+            let phoneMatch = info.match(/[0-9]{2,3}-?[0-9]{3,4}-?[0-9]{4}/);
+            let phone = phoneMatch ? autoHyphenPhone(phoneMatch[0]) : '';
+            let namePart = phoneMatch ? info.replace(phoneMatch[0], '').replace(/[()]/g, '').trim() : info.trim();
+            
+            let parts = namePart.split(/\s+/);
+            let name = parts[0] || '';
+            let title = parts.slice(1).join(' ') || '';
+
+            try {
+                await contCol.add({ name, title, phone, created_at: Date.now() });
+                alert(`'${name}' 담당자가 주소록에 등록되었습니다.`);
+                validateQuickSaveContact(prefix);
+            } catch (err) {
+                console.error(err);
+                alert("등록에 실패했습니다.");
             }
         }
 
@@ -749,7 +869,7 @@
 
         window.renderAddressBook = function() {
             const dlComp = document.getElementById('dlCompanies');
-            dlComp.innerHTML = companiesData.map(c => `<option value="${c.name}">${c.address}</option>`).join('');
+            dlComp.innerHTML = companiesData.map(c => `<option value="${c.name}"></option>`).join('');
             
             const dlCont = document.getElementById('dlContacts');
             dlCont.innerHTML = contactsData.map(c => {
@@ -786,6 +906,8 @@
                     </div>
                 </li>
             `}).join('');
+            
+            validateAllQuickSaves(); 
         }
 
         function fetchAddressBook() {
@@ -809,20 +931,28 @@
             });
         }
 
-        function handleCompanyAutoFill(e, targetAddressId) {
+        function handleCompanyAutoFill(e, prefix) {
             const val = e.target.value;
             const found = companiesData.find(c => c.name === val);
             if(found) {
-                document.getElementById(targetAddressId).value = found.address;
+                document.getElementById(prefix + 'Address').value = found.address;
             }
+            validateQuickSaveCompany(prefix);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchAddressBook();
 
-            document.getElementById('loadingCompany').addEventListener('input', (e) => handleCompanyAutoFill(e, 'loadingAddress'));
-            document.getElementById('waypointCompany').addEventListener('input', (e) => handleCompanyAutoFill(e, 'waypointAddress'));
-            document.getElementById('unloadingCompany').addEventListener('input', (e) => handleCompanyAutoFill(e, 'unloadingAddress'));
+            // 🚀 실시간 입력 검증 이벤트 연결
+            ['loading', 'waypoint', 'unloading'].forEach(prefix => {
+                const compEl = document.getElementById(prefix + 'Company');
+                const addrEl = document.getElementById(prefix + 'Address');
+                const infoEl = document.getElementById(prefix + 'Info');
+
+                if(compEl) compEl.addEventListener('input', (e) => handleCompanyAutoFill(e, prefix));
+                if(addrEl) addrEl.addEventListener('input', () => validateQuickSaveCompany(prefix));
+                if(infoEl) infoEl.addEventListener('input', () => validateQuickSaveContact(prefix));
+            });
 
             const phoneInput = document.getElementById('newContactPhone');
             if (phoneInput) {
@@ -909,6 +1039,7 @@
                     document.getElementById('waypointAddress').value = '';
                     document.getElementById('waypointInfo').value = '';
                 }
+                validateAllQuickSaves(); 
             });
 
             const sameDayCheck = document.getElementById('sameDayCheck');
@@ -998,70 +1129,6 @@
             document.getElementById('dispatchForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                // 🚀 폼 저장 전 신규 업체/담당자 검증 및 주소록 자동 등록 로직
-                const companiesToCheck = [
-                    { name: document.getElementById('loadingCompany').value.trim(), address: document.getElementById('loadingAddress').value.trim() },
-                    { name: document.getElementById('unloadingCompany').value.trim(), address: document.getElementById('unloadingAddress').value.trim() }
-                ];
-                if (document.getElementById('useWaypointCheck').checked) {
-                    companiesToCheck.push({ name: document.getElementById('waypointCompany').value.trim(), address: document.getElementById('waypointAddress').value.trim() });
-                }
-
-                for (let comp of companiesToCheck) {
-                    if (!comp.name || comp.name === '-') continue;
-                    const exists = companiesData.some(c => c.name === comp.name && c.address === comp.address);
-                    if (!exists) {
-                        if (confirm(`'${comp.name}' (주소: ${comp.address || '없음'}) 정보가 주소록에 없습니다.\n신규 배송지로 등록하시겠습니까?`)) {
-                            await compCol.add({ name: comp.name, address: comp.address || '', created_at: Date.now() });
-                        }
-                    }
-                }
-
-                const contactsToCheck = [
-                    document.getElementById('loadingInfo').value.trim(),
-                    document.getElementById('unloadingInfo').value.trim()
-                ];
-                if (document.getElementById('useWaypointCheck').checked) {
-                    contactsToCheck.push(document.getElementById('waypointInfo').value.trim());
-                }
-
-                for (let info of contactsToCheck) {
-                    if (!info || info === '-') continue;
-                    
-                    const exactMatch = contactsData.some(c => {
-                        const t = c.title ? ` ${c.title}` : '';
-                        return `${c.name}${t}(${c.phone})` === info;
-                    });
-
-                    if (exactMatch) continue;
-
-                    let phoneMatch = info.match(/[0-9]{2,3}-?[0-9]{3,4}-?[0-9]{4}/);
-                    let phone = phoneMatch ? autoHyphenPhone(phoneMatch[0]) : '';
-                    let namePart = phoneMatch ? info.replace(phoneMatch[0], '').replace(/[()]/g, '').trim() : info.trim();
-                    
-                    let parts = namePart.split(/\s+/);
-                    let name = parts[0] || '';
-                    let title = parts.slice(1).join(' ') || '';
-
-                    if (!name && !phone) continue;
-
-                    const normalizedInputPhone = phone.replace(/[^0-9]/g, '');
-                    let isDuplicate = false;
-                    
-                    if (normalizedInputPhone) {
-                        isDuplicate = contactsData.some(c => c.phone.replace(/[^0-9]/g, '') === normalizedInputPhone && c.name === name);
-                    } else {
-                        isDuplicate = contactsData.some(c => c.name === name);
-                    }
-
-                    if (!isDuplicate) {
-                        if (confirm(`'${info}' 담당자 정보가 주소록에 없습니다.\n신규 담당자로 등록하시겠습니까?`)) {
-                            await contCol.add({ name, title, phone, created_at: Date.now() });
-                        }
-                    }
-                }
-                // 🚀 신규 검증 로직 종료
-
                 const dispatchStr = `${document.getElementById('dispatchDate').value} ${document.getElementById('dispatchHour').value}:${document.getElementById('dispatchMinute').value}`;
                 const arrivalStr = `${document.getElementById('arrivalDate').value} ${document.getElementById('arrivalHour').value}:${document.getElementById('arrivalMinute').value}`;
                 
@@ -1471,6 +1538,7 @@
             document.getElementById('cancelBtn').classList.remove('hidden');
 
             updateHighlightRow();
+            validateAllQuickSaves(); 
 
             document.getElementById('formContainer').scrollIntoView({ behavior: 'smooth' });
 
@@ -1531,6 +1599,7 @@ ${waypointText}[하차]
             document.getElementById('cancelBtn').classList.remove('hidden'); 
             
             updateHighlightRow();
+            validateAllQuickSaves(); 
 
             alert('기존 정보가 입력창에 복사되었습니다. 내용을 확인/수정 후 [배차 내역 등록하기]를 눌러주세요.');
         }
@@ -1574,6 +1643,7 @@ ${waypointText}[하차]
             document.getElementById('cancelBtn').classList.add('hidden');
 
             updateHighlightRow();
+            validateAllQuickSaves(); 
         }
 
         async function updateApproval(id, newApprovalStatus) {
